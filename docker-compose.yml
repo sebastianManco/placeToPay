@@ -1,0 +1,39 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: placetopay-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+    networks:
+      - placetopay-net
+
+  db:
+    image: mariadb:10.6
+    container_name: placetopay-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: placetopay
+      MYSQL_USER: placetopay
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+    ports:
+      - "33060:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - placetopay-net
+
+networks:
+  placetopay-net:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local

@@ -2,26 +2,9 @@
 
 namespace App;
 
-
-use Illuminate\Database\Eloquent\Model;
-
-class User extends Model
+/**
+ * @deprecated Use App\Models\User instead.
+ */
+class User extends \App\Models\User
 {
-    protected $table = 'users';
-    protected $primaryKey = 'identification';
-    public $incrementing = false;
-    protected $fillable = [
-        'name',
-         'last_Name', 
-         'email', 
-         'phone', 
-         'direction',
-         'idenfication',
-         'user_Name',
-         'password',
-         'confirm_Password'
-        ];
-    
 }
-
-
