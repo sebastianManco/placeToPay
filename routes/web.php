@@ -1,9 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\registerUserController;
-use App\Http\Controllers\loginController;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\RegisterUserController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,6 +19,7 @@ use App\Http\Controllers\loginController;
 
 Route::get('/', [HomeController::class, 'index']);
 Route::get('/home', [HomeController::class, 'index'])->name('home');
-Route::get('/home/register', [registerUserController::class, 'create']);
-Route::post('/home/registered', [registerUserController::class, 'store']);
-Route::get('/home/login', [loginController::class, 'index']);
+Route::get('/home/register', [RegisterUserController::class, 'create'])->name('register');
+Route::post('/home/registered', [RegisterUserController::class, 'store'])->name('register.store');
+Route::get('/home/login', [LoginController::class, 'index'])->name('login');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

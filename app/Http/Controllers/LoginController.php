@@ -5,14 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-class HomeController extends Controller
+class LoginController extends Controller
 {
     /**
-     * Show the application dashboard.
+     * Display the login form.
      */
     public function index(): View
     {
-        return view('home');
+        return view('configUsers.login');
     }
 }
-
