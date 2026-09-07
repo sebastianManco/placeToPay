@@ -10,11 +10,40 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected  = 'users';
-    protected  = 'identification';
-    public  = false;
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'users';
 
-    protected  = [
+    /**
+     * The primary key associated with the table.
+     *
+     * @var string
+     */
+    protected $primaryKey = 'identification';
+
+    /**
+     * Indicates if the model's ID is auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+    /**
+     * The data type of the primary key ID.
+     *
+     * @var string
+     */
+    protected $keyType = 'int';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
         'name',
         'last_Name', 
         'email', 
@@ -23,11 +52,31 @@ class User extends Authenticatable
         'identification',
         'user_Name',
         'password',
-        'confirm_Password'
+        'confirm_Password',
     ];
 
-    protected  = [
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
         'password',
+        'confirm_Password',
         'remember_token',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
 }
+
