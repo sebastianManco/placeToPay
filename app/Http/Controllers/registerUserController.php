@@ -31,26 +31,32 @@ class registerUserController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param  \App\Http\Requests\registerUserRequest  $request
+     * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
-    public function store(/*Request $request*/)
+    public function store(registerUserRequest $request)
     {
-       
+        $validated = $request->validated();
 
-       return User::create([
-        'name' => request('name'),
-        'last_Name' => request('lastName'),
-        'email' => request('email'),
-        'phone' => request('phone'),
-        'direction' => request('direction'),
-        'identification' => request('identification'),
-        'user_Name' => request('userName'),
-        'password' =>request('password'),
-        'confirm_Password' => request('confirmPassword')
-
+        $user = User::create([
+            'identification' => $validated['identification'],
+            'name' => $validated['name'],
+            'last_Name' => $validated['lastName'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'direction' => $validated['direction'],
+            'user_Name' => $validated['userName'],
+            'password' => $validated['password'],
         ]);
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'User registered successfully.',
+                'user' => $user,
+            ], 201);
+        }
+
+        return redirect()->back()->with('success', 'User registered successfully.');
     }
 
     /**
