@@ -6,11 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">    
     <meta name="author" content="Sebastian Manco Valencia">
-    <!-- CSS only -->
-<link rel="stylesheet" href="/css/app.css">
-
-<!-- JS, Popper.js, and jQuery -->
-<script src="/js/app.js"> </script>
+    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
       <title>Home</title>
 
         <!-- Styles -->

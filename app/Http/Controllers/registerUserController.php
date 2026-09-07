@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 use App\Http\Requests\registerUserRequest;
 use Illuminate\Http\Request;
-use App\user;
+use App\Models\User;
 
 class registerUserController extends Controller
 {
