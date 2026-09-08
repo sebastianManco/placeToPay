@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ClientController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\CartController;
@@ -36,7 +37,6 @@ Route::delete('/cart/items/{itemId}', [CartController::class, 'removeItem'])->na
 Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
 Route::get('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 Route::post('/cart/checkout/confirm', [CartController::class, 'confirm'])->name('cart.checkout.confirm');
-Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
 // Guest routes (Authentication & Registration)
 Route::middleware('guest')->group(function () {
@@ -65,6 +65,11 @@ Route::middleware('auth')->group(function () {
     Route::middleware('verified')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+        // Customer orders routes
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/my-orders', fn() => redirect()->route('orders.index'))->name('orders.my-orders');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+
         // Admin routes
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
             Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
@@ -87,6 +92,11 @@ Route::middleware('auth')->group(function () {
             Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
             Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
             Route::patch('/categories/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('categories.toggle-status');
+
+            // Order management routes
+            Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
+            Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
+            Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.update-status');
         });
     });
 });

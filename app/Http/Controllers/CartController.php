@@ -97,13 +97,22 @@ class CartController extends Controller
         ]);
 
         $cart = $this->resolveCart($request);
+        $isCheckout = $request->input('redirect_to') === 'checkout';
 
         try {
             $this->cartService->updateItemQuantity($cart, $itemId, (int) $validated['quantity']);
 
+            if ($isCheckout) {
+                if ($cart->items()->count() === 0) {
+                    return redirect()->route('cart.index')->with('success', 'El carrito ha quedado vacío.');
+                }
+                return redirect()->route('cart.checkout')->with('success', 'Cantidad actualizada correctamente.');
+            }
+
             return redirect()->route('cart.index')->with('success', 'Cantidad actualizada correctamente.');
         } catch (InvalidArgumentException $e) {
-            return redirect()->route('cart.index')->with('error', $e->getMessage());
+            $redirectRoute = $isCheckout ? 'cart.checkout' : 'cart.index';
+            return redirect()->route($redirectRoute)->with('error', $e->getMessage());
         }
     }
 
@@ -118,6 +127,14 @@ class CartController extends Controller
     {
         $cart = $this->resolveCart($request);
         $this->cartService->removeItem($cart, $itemId);
+
+        if ($request->input('redirect_to') === 'checkout') {
+            if ($cart->items()->count() === 0) {
+                return redirect()->route('cart.index')->with('success', 'Producto eliminado. El carrito ha quedado vacío.');
+            }
+
+            return redirect()->route('cart.checkout')->with('success', 'Producto eliminado del pedido.');
+        }
 
         return redirect()->route('cart.index')->with('success', 'Producto eliminado del carrito.');
     }

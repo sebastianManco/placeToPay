@@ -15,6 +15,15 @@
         </a>
     </div>
 
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
     @if (session('error'))
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             {{ session('error') }}
@@ -25,25 +34,61 @@
     @endif
 
     <div class="row">
-        {{-- Resumen de Artículos --}}
+        {{-- Resumen y Modificación de Artículos --}}
         <div class="col-lg-7 mb-4">
             <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-white font-weight-bold py-3">
-                    {{ __('Artículos del Pedido') }} ({{ $cart->items->count() }})
+                <div class="card-header bg-white font-weight-bold py-3 d-flex justify-content-between align-items-center">
+                    <span>{{ __('Artículos del Pedido') }} ({{ $cart->items->count() }})</span>
+                    <small class="text-muted">{{ __('Puedes ajustar cantidades o remover productos antes de confirmar') }}</small>
                 </div>
                 <div class="card-body p-0">
                     <ul class="list-group list-group-flush">
                         @foreach ($cart->items as $item)
-                            <li class="list-group-item d-flex justify-content-between align-items-center py-3">
-                                <div>
-                                    <h6 class="font-weight-bold mb-1">{{ $item->product_name }}</h6>
-                                    <small class="text-muted">
-                                        {{ $item->quantity }} x ${{ number_format($item->unit_price, 2, ',', '.') }}
-                                    </small>
+                            <li class="list-group-item py-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="font-weight-bold mb-1">{{ $item->product_name }}</h6>
+                                        <small class="text-muted">
+                                            ${{ number_format($item->unit_price, 2, ',', '.') }} {{ $cart->currency }} c/u
+                                        </small>
+                                    </div>
+                                    <span class="font-weight-bold text-dark h6 mb-0">
+                                        ${{ number_format($item->subtotal, 2, ',', '.') }}
+                                    </span>
                                 </div>
-                                <span class="font-weight-bold text-dark">
-                                    ${{ number_format($item->subtotal, 2, ',', '.') }}
-                                </span>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    {{-- Modificar Cantidad --}}
+                                    <form action="{{ route('cart.items.update', $item->id) }}" method="POST" class="d-flex align-items-center">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="hidden" name="redirect_to" value="checkout">
+                                        <label class="small text-muted mr-2 mb-0">{{ __('Cantidad:') }}</label>
+                                        <input type="number" 
+                                               name="quantity" 
+                                               value="{{ $item->quantity }}" 
+                                               min="1" 
+                                               max="{{ $item->product->stock ?? 99 }}" 
+                                               class="form-control form-control-sm text-center mr-2" 
+                                               style="width: 70px;">
+                                        <button type="submit" class="btn btn-outline-primary btn-sm" title="{{ __('Actualizar cantidad') }}">
+                                            {{ __('Actualizar') }}
+                                        </button>
+                                    </form>
+
+                                    {{-- Remover Ítem --}}
+                                    <form action="{{ route('cart.items.destroy', $item->id) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <input type="hidden" name="redirect_to" value="checkout">
+                                        <button type="submit" class="btn btn-link text-danger btn-sm p-0" onclick="return confirm('¿Deseas quitar este producto del pedido?');">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-trash mr-1" viewBox="0 0 16 16">
+                                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                                            </svg>
+                                            {{ __('Quitar') }}
+                                        </button>
+                                    </form>
+                                </div>
                             </li>
                         @endforeach
                     </ul>
