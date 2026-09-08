@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ClientController;
+use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
@@ -20,8 +22,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public routes
-Route::get('/', [HomeController::class, 'index']);
-Route::get('/home', [HomeController::class, 'index'])->name('home');
+Route::get('/', [DashboardController::class, 'index']);
+Route::get('/home', [DashboardController::class, 'index'])->name('home');
+Route::get('/showcase', [DashboardController::class, 'index'])->name('showcase.index');
 
 // Guest routes (Authentication & Registration)
 Route::middleware('guest')->group(function () {
@@ -56,6 +59,22 @@ Route::middleware('auth')->group(function () {
             Route::get('/clients/{client}/edit', [ClientController::class, 'edit'])->name('clients.edit');
             Route::put('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
             Route::patch('/clients/{user}/toggle-status', [ClientController::class, 'toggleStatus'])->name('clients.toggle-status');
+
+            // Product management routes
+            Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+            Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+            Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+            Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
+            Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+            Route::patch('/products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggle-status');
+
+            // Category management routes
+            Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+            Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
+            Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+            Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
+            Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+            Route::patch('/categories/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('categories.toggle-status');
         });
     });
 });
