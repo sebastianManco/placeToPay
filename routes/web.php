@@ -51,6 +51,7 @@ Route::middleware('auth')->group(function () {
     // Verified users routes
     Route::middleware('verified')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/showcase', [DashboardController::class, 'index'])->name('showcase.index');
 
         // Admin routes
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {

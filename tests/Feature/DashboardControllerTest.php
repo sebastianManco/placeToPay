@@ -68,7 +68,7 @@ class DashboardControllerTest extends TestCase
         $response = $this->actingAs($user)->get('/dashboard');
 
         $response->assertStatus(200);
-        $response->assertSee('valor default');
+        $response->assertSee('Vitrina de Productos');
     }
 
     /**

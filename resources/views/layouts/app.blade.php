@@ -32,7 +32,7 @@
                     <ul class="navbar-nav mr-auto">
                         @auth
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a>
+                                <a class="nav-link" href="{{ route('dashboard') }}">{{ __('Vitrina de Productos') }}</a>
                             </li>
                             @if (Auth::user()->isAdmin())
                                 <li class="nav-item">
