@@ -50,7 +50,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'email', 
         'phone', 
         'direction',
+        'Direction',
         'identification',
+        'user_name',
         'user_Name',
         'password',
         'email_verified_at',
@@ -96,6 +98,22 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isActive(): bool
     {
         return (bool) $this->is_active;
+    }
+
+    /**
+     * Get the user direction.
+     */
+    public function getDirectionAttribute(): ?string
+    {
+        return $this->attributes['Direction'] ?? $this->attributes['direction'] ?? null;
+    }
+
+    /**
+     * Set the user direction.
+     */
+    public function setDirectionAttribute(?string $value): void
+    {
+        $this->attributes['Direction'] = $value;
     }
 }
 

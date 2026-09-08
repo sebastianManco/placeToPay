@@ -53,6 +53,8 @@ Route::middleware('auth')->group(function () {
         // Admin routes
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
             Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
+            Route::get('/clients/{client}/edit', [ClientController::class, 'edit'])->name('clients.edit');
+            Route::put('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
             Route::patch('/clients/{user}/toggle-status', [ClientController::class, 'toggleStatus'])->name('clients.toggle-status');
         });
     });

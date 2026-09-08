@@ -77,19 +77,24 @@
                                     @endif
                                 </td>
                                 <td class="text-center">
-                                    <form method="POST" action="{{ route('admin.clients.toggle-status', $client) }}" class="d-inline">
-                                        @csrf
-                                        @method('PATCH')
-                                        @if ($client->is_active)
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Desactivar cliente">
-                                                Desactivar
-                                            </button>
-                                        @else
-                                            <button type="submit" class="btn btn-sm btn-outline-success" title="Activar cliente">
-                                                Activar
-                                            </button>
-                                        @endif
-                                    </form>
+                                    <div class="d-inline-flex gap-2">
+                                        <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-sm btn-outline-primary" title="Editar cliente">
+                                            Editar
+                                        </a>
+                                        <form method="POST" action="{{ route('admin.clients.toggle-status', $client) }}" class="d-inline">
+                                            @csrf
+                                            @method('PATCH')
+                                            @if ($client->is_active)
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Desactivar cliente">
+                                                    Desactivar
+                                                </button>
+                                            @else
+                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Activar cliente">
+                                                    Activar
+                                                </button>
+                                            @endif
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
