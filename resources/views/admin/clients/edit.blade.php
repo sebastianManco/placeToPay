@@ -1,0 +1,162 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>{{ __('Editar Cliente') }}</h2>
+            <p class="text-muted mb-0">{{ __('Modifique los datos del cliente ') }} <strong>{{ $client->name }} {{ $client->last_Name }}</strong></p>
+        </div>
+        <a href="{{ route('admin.clients.index') }}" class="btn btn-outline-secondary">
+            &larr; {{ __('Volver al listado') }}
+        </a>
+    </div>
+
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    <div class="card shadow-sm">
+        <div class="card-body p-4">
+            <form method="POST" action="{{ route('admin.clients.update', $client) }}">
+                @csrf
+                @method('PUT')
+
+                <div class="row g-3">
+                    <!-- Identificación (Solo Lectura) -->
+                    <div class="col-md-6">
+                        <label for="identification" class="form-label">
+                            {{ __('Identificación / Cédula') }}
+                            <small class="text-muted">({{ __('No modificable') }})</small>
+                        </label>
+                        <input type="text"
+                               id="identification"
+                               class="form-control bg-light"
+                               value="{{ $client->identification }}"
+                               readonly
+                               disabled>
+                    </div>
+
+                    <!-- Nombre de Usuario (Solo Lectura) -->
+                    <div class="col-md-6">
+                        <label for="user_name" class="form-label">
+                            {{ __('Nombre de Usuario') }}
+                            <small class="text-muted">({{ __('No modificable') }})</small>
+                        </label>
+                        <input type="text"
+                               id="user_name"
+                               class="form-control bg-light"
+                               value="{{ $client->user_name }}"
+                               readonly
+                               disabled>
+                    </div>
+
+                    <!-- Nombres -->
+                    <div class="col-md-6">
+                        <label for="name" class="form-label">{{ __('Nombres') }} <span class="text-danger">*</span></label>
+                        <input type="text"
+                               id="name"
+                               name="name"
+                               class="form-control @error('name') is-invalid @enderror"
+                               value="{{ old('name', $client->name) }}"
+                               required
+                               maxlength="50">
+                        @error('name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Apellidos -->
+                    <div class="col-md-6">
+                        <label for="last_Name" class="form-label">{{ __('Apellidos') }} <span class="text-danger">*</span></label>
+                        <input type="text"
+                               id="last_Name"
+                               name="last_Name"
+                               class="form-control @error('last_Name') is-invalid @enderror"
+                               value="{{ old('last_Name', $client->last_Name) }}"
+                               required
+                               maxlength="50">
+                        @error('last_Name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Email -->
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">{{ __('Correo Electrónico') }} <span class="text-danger">*</span></label>
+                        <input type="email"
+                               id="email"
+                               name="email"
+                               class="form-control @error('email') is-invalid @enderror"
+                               value="{{ old('email', $client->email) }}"
+                               required
+                               maxlength="100">
+                        @error('email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Teléfono -->
+                    <div class="col-md-6">
+                        <label for="phone" class="form-label">{{ __('Teléfono') }} <span class="text-danger">*</span></label>
+                        <input type="text"
+                               id="phone"
+                               name="phone"
+                               class="form-control @error('phone') is-invalid @enderror"
+                               value="{{ old('phone', $client->phone) }}"
+                               required
+                               maxlength="20">
+                        @error('phone')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Dirección -->
+                    <div class="col-md-8">
+                        <label for="direction" class="form-label">{{ __('Dirección de Residencia') }} <span class="text-danger">*</span></label>
+                        <input type="text"
+                               id="direction"
+                               name="direction"
+                               class="form-control @error('direction') is-invalid @enderror"
+                               value="{{ old('direction', $client->direction) }}"
+                               required
+                               maxlength="100">
+                        @error('direction')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Estado Activo/Inactivo -->
+                    <div class="col-md-4">
+                        <label for="is_active" class="form-label">{{ __('Estado de la Cuenta') }}</label>
+                        <select id="is_active" name="is_active" class="form-select @error('is_active') is-invalid @enderror">
+                            <option value="1" {{ old('is_active', $client->is_active ? '1' : '0') === '1' ? 'selected' : '' }}>
+                                {{ __('Activo') }}
+                            </option>
+                            <option value="0" {{ old('is_active', $client->is_active ? '1' : '0') === '0' ? 'selected' : '' }}>
+                                {{ __('Inactivo') }}
+                            </option>
+                        </select>
+                        @error('is_active')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ route('admin.clients.index') }}" class="btn btn-outline-secondary">
+                        {{ __('Cancelar') }}
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        {{ __('Guardar Cambios') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection
