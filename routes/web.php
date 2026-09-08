@@ -75,6 +75,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/my-orders', fn() => redirect()->route('orders.index'))->name('orders.my-orders');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
         Route::match(['get', 'post'], '/payment/{order}/pay', [PaymentController::class, 'pay'])->name('payment.pay');
+        Route::match(['get', 'post'], '/orders/{order}/retry-payment', [PaymentController::class, 'pay'])->name('orders.retry-payment');
 
         // Admin routes
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
