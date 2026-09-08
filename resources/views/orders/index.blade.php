@@ -106,7 +106,7 @@
                                 <th class="text-center">{{ __('Artículos') }}</th>
                                 <th class="text-right">{{ __('Total') }}</th>
                                 <th class="text-center">{{ __('Estado') }}</th>
-                                <th class="text-center" style="width: 140px;">{{ __('Acción') }}</th>
+                                <th class="text-center" style="width: 210px;">{{ __('Acción') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -140,9 +140,23 @@
                                         @endif
                                     </td>
                                     <td class="text-center align-middle">
-                                        <a href="{{ route('orders.show', $order->id) }}" class="btn btn-outline-primary btn-sm">
-                                            {{ __('Ver Detalle') }}
-                                        </a>
+                                        <div class="d-flex justify-content-center align-items-center">
+                                            <a href="{{ route('orders.show', $order->id) }}" class="btn btn-outline-primary btn-sm mr-1">
+                                                {{ __('Ver Detalle') }}
+                                            </a>
+                                            @if ($order->canRetryPayment())
+                                                <form action="{{ route('orders.retry-payment', $order->id) }}" method="POST" class="d-inline m-0">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm {{ $order->isRejected() ? 'btn-danger' : 'btn-warning' }}" title="{{ $order->isRejected() ? __('Reintentar Pago') : __('Pagar') }}">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="bi bi-credit-card mr-1" viewBox="0 0 16 16">
+                                                            <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v1h14V4a1 1 0 0 0-1-1H2zm13 4H1v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7z"/>
+                                                            <path d="M2 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-1z"/>
+                                                        </svg>
+                                                        {{ $order->isRejected() ? __('Reintentar Pago') : __('Pagar') }}
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach

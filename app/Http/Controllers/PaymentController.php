@@ -70,6 +70,11 @@ class PaymentController extends Controller
                 ->with('success', 'Esta orden ya se encuentra pagada y aprobada.');
         }
 
+        if (! $order->canRetryPayment()) {
+            return redirect()->route('orders.show', $order->id)
+                ->with('error', 'Esta orden no permite procesar o reintentar el pago.');
+        }
+
         if ($order->total_amount <= 0) {
             return redirect()->route('orders.show', $order->id)
                 ->with('error', 'La orden debe tener un valor mayor a cero para ser pagada.');
@@ -83,6 +88,7 @@ class PaymentController extends Controller
             ]);
 
             $order->update([
+                'status' => Order::STATUS_PENDING_PAYMENT,
                 'request_id' => (string) ($session['requestId'] ?? ''),
                 'process_url' => (string) ($session['processUrl'] ?? ''),
             ]);

@@ -17,6 +17,8 @@ use Illuminate\Support\Str;
  * @property string $reference
  * @property int|null $user_identification
  * @property string|null $session_id
+ * @property string|null $request_id
+ * @property string|null $process_url
  * @property string $status
  * @property float $total_amount
  * @property string $currency
@@ -164,6 +166,41 @@ class Order extends Model
     public function canBePaid(): bool
     {
         return in_array($this->status, [self::STATUS_PENDING_PAYMENT, self::STATUS_REJECTED], true);
+    }
+
+    /**
+     * Determine whether the order was completed satisfactorily (approved).
+     *
+     * @return bool
+     */
+    public function isSatisfactory(): bool
+    {
+        return $this->isApproved();
+    }
+
+    /**
+     * Determine whether the order was not satisfactory (rejected, pending payment, or cancelled).
+     *
+     * @return bool
+     */
+    public function isNotSatisfactory(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_REJECTED,
+            self::STATUS_PENDING_PAYMENT,
+            self::STATUS_CANCELLED,
+        ], true);
+    }
+
+    /**
+     * Determine whether the order allows a payment retry.
+     * Only non-satisfactory orders eligible for payment can be retried.
+     *
+     * @return bool
+     */
+    public function canRetryPayment(): bool
+    {
+        return $this->canBePaid() && ! $this->isApproved();
     }
 
     /**
