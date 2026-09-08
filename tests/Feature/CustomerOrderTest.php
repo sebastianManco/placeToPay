@@ -194,4 +194,179 @@ class CustomerOrderTest extends TestCase
         $this->assertEquals(1, $cart->fresh()->items()->count());
         $this->assertEquals(15000.00, (float) $cart->fresh()->total_amount);
     }
+
+    /**
+     * Test that the purchase history view displays the retry payment button for rejected orders.
+     *
+     * @return void
+     */
+    public function test_client_purchase_history_shows_retry_payment_button_for_rejected_order(): void
+    {
+        $client = $this->createClient();
+        $order = $this->createOrder($client, [
+            'reference' => 'ORD-REJ-001',
+            'status' => Order::STATUS_REJECTED,
+        ]);
+
+        $response = $this->actingAs($client)->get(route('orders.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('ORD-REJ-001');
+        $response->assertSee('Rechazado');
+        $response->assertSee('Reintentar Pago');
+    }
+
+    /**
+     * Test that the purchase history view displays the pay button for pending payment orders.
+     *
+     * @return void
+     */
+    public function test_client_purchase_history_shows_pay_button_for_pending_order(): void
+    {
+        $client = $this->createClient();
+        $order = $this->createOrder($client, [
+            'reference' => 'ORD-PEND-002',
+            'status' => Order::STATUS_PENDING_PAYMENT,
+        ]);
+
+        $response = $this->actingAs($client)->get(route('orders.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('ORD-PEND-002');
+        $response->assertSee('Pendiente de Pago');
+        $response->assertSee('Pagar');
+    }
+
+    /**
+     * Test that the purchase history view does not display retry buttons for approved orders.
+     *
+     * @return void
+     */
+    public function test_client_purchase_history_does_not_show_retry_payment_button_for_approved_order(): void
+    {
+        $client = $this->createClient();
+        $order = $this->createOrder($client, [
+            'reference' => 'ORD-APP-003',
+            'status' => Order::STATUS_APPROVED,
+        ]);
+
+        $response = $this->actingAs($client)->get(route('orders.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('ORD-APP-003');
+        $response->assertSee('Aprobado');
+        $response->assertDontSee('Reintentar Pago');
+    }
+
+    /**
+     * Test that a client can retry payment for a rejected order and is redirected to PlaceToPay.
+     *
+     * @return void
+     */
+    public function test_client_can_retry_payment_for_rejected_order_and_is_redirected_to_gateway(): void
+    {
+        \Illuminate\Support\Facades\Http::fake([
+            'checkout-test.placetopay.com/api/session' => \Illuminate\Support\Facades\Http::response([
+                'status' => [
+                    'status' => 'OK',
+                    'reason' => 'PC',
+                    'message' => 'Sesión creada exitosamente',
+                    'date' => now()->toIso8601String(),
+                ],
+                'requestId' => 8888,
+                'processUrl' => 'https://checkout-test.placetopay.com/session/8888/token',
+            ], 200),
+        ]);
+
+        $client = $this->createClient();
+        $order = $this->createOrder($client, [
+            'reference' => 'ORD-RETRY-004',
+            'status' => Order::STATUS_REJECTED,
+            'request_id' => 'old-session-1234',
+        ]);
+
+        $response = $this->actingAs($client)->post(route('orders.retry-payment', $order->id));
+
+        $response->assertRedirect('https://checkout-test.placetopay.com/session/8888/token');
+
+        $order->refresh();
+        $this->assertEquals(Order::STATUS_PENDING_PAYMENT, $order->status);
+        $this->assertEquals('8888', $order->request_id);
+    }
+
+    /**
+     * Test that a client cannot retry payment for another client's order.
+     *
+     * @return void
+     */
+    public function test_client_cannot_retry_payment_for_another_clients_order(): void
+    {
+        $clientA = $this->createClient();
+        $clientB = $this->createClient();
+
+        $orderOfB = $this->createOrder($clientB, [
+            'status' => Order::STATUS_REJECTED,
+        ]);
+
+        $response = $this->actingAs($clientA)->post(route('payment.pay', $orderOfB->id));
+
+        $response->assertStatus(403);
+    }
+
+    /**
+     * Test that an already approved order cannot be repaid or retried.
+     *
+     * @return void
+     */
+    public function test_client_cannot_retry_payment_for_already_approved_order(): void
+    {
+        $client = $this->createClient();
+        $order = $this->createOrder($client, [
+            'status' => Order::STATUS_APPROVED,
+        ]);
+
+        $response = $this->actingAs($client)->post(route('payment.pay', $order->id));
+
+        $response->assertRedirect(route('orders.show', $order->id));
+        $response->assertSessionHas('success', 'Esta orden ya se encuentra pagada y aprobada.');
+    }
+
+    /**
+     * Test that guests cannot retry payment and are redirected to login.
+     *
+     * @return void
+     */
+    public function test_guest_cannot_retry_payment(): void
+    {
+        $client = $this->createClient();
+        $order = $this->createOrder($client, [
+            'status' => Order::STATUS_REJECTED,
+        ]);
+
+        $response = $this->post(route('payment.pay', $order->id));
+
+        $response->assertRedirect(route('login'));
+    }
+
+    /**
+     * Test that order detail displays rejection alert and retry button when order is rejected.
+     *
+     * @return void
+     */
+    public function test_order_detail_view_displays_retry_button_and_rejection_notice_when_rejected(): void
+    {
+        $client = $this->createClient();
+        $order = $this->createOrder($client, [
+            'reference' => 'ORD-FAIL-005',
+            'status' => Order::STATUS_REJECTED,
+        ]);
+
+        $response = $this->actingAs($client)->get(route('orders.show', $order->id));
+
+        $response->assertStatus(200);
+        $response->assertSee('ORD-FAIL-005');
+        $response->assertSee('Rechazada');
+        $response->assertSee('Reintentar Pago con PlaceToPay');
+    }
 }
+

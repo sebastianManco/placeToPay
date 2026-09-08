@@ -137,6 +137,12 @@
                             @endif
                         </div>
                     @elseif ($order->canBePaid())
+                        @if ($order->isRejected())
+                            <div class="alert alert-danger small mb-3">
+                                <strong>{{ __('Pago no satisfactorio') }}</strong>
+                                <p class="mb-0 mt-1">{{ __('La transacción previa fue rechazada o cancelada. Puedes reintentar el pago con PlaceToPay a continuación sin perder los productos de tu orden.') }}</p>
+                            </div>
+                        @endif
                         <div class="p-3 bg-light rounded border">
                             <div class="d-flex align-items-center mb-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-shield-check text-primary mr-2" viewBox="0 0 16 16">
