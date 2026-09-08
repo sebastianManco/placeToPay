@@ -33,6 +33,24 @@
         </div>
     @endif
 
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if (session('info'))
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            {{ session('info') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-lg-8 mb-4">
             <div class="card shadow-sm border-0 mb-4">
@@ -110,10 +128,47 @@
                         </div>
                     @endif
                     <hr>
-                    <div class="alert alert-info small mb-0">
-                        <strong>{{ __('Pasarela de Pagos:') }}</strong>
-                        {{ __('La orden se encuentra registrada con estado Pendiente de Pago, lista para su integración con PlaceToPay.') }}
-                    </div>
+                    @if ($order->isApproved())
+                        <div class="alert alert-success small mb-0">
+                            <strong>{{ __('Pago Aprobado') }}</strong>
+                            <p class="mb-0 mt-1">{{ __('La transacción ha sido aprobada exitosamente por PlaceToPay.') }}</p>
+                            @if ($order->request_id)
+                                <small class="text-muted d-block mt-1">{{ __('ID de Sesión:') }} {{ $order->request_id }}</small>
+                            @endif
+                        </div>
+                    @elseif ($order->canBePaid())
+                        <div class="p-3 bg-light rounded border">
+                            <div class="d-flex align-items-center mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-shield-check text-primary mr-2" viewBox="0 0 16 16">
+                                    <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.293.118a.55.55 0 0 0 .101.025.615.615 0 0 0 .1-.025c.076-.023.174-.061.294-.118.24-.113.547-.29.893-.533a10.726 10.726 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067c-.53 0-1.552.223-2.662.524zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.599 4.491-.71 7.776-2.383 9.992a12.727 12.727 0 0 1-2.73 2.68 1.772 1.772 0 0 1-.944.296 1.772 1.772 0 0 1-.944-.296 12.727 12.727 0 0 1-2.73-2.68C2.38 12.607 1.07 9.322 1.67 4.83a1.54 1.54 0 0 1 1.044-1.262c.658-.215 1.777-.57 2.887-.87z"/>
+                                    <path d="M10.854 5.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 7.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
+                                </svg>
+                                <strong class="text-dark">{{ __('Pasarela de Pagos PlaceToPay') }}</strong>
+                            </div>
+                            <p class="small text-muted mb-3">
+                                {{ __('Haz clic para ser redirigido a la pasarela segura de PlaceToPay y realizar el pago.') }}
+                            </p>
+                            <form action="{{ route('payment.pay', $order->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-primary btn-block font-weight-bold shadow-sm py-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-credit-card mr-1" viewBox="0 0 16 16">
+                                        <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v1h14V4a1 1 0 0 0-1-1H2zm13 4H1v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7z"/>
+                                        <path d="M2 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-1z"/>
+                                    </svg>
+                                    {{ $order->isRejected() ? __('Reintentar Pago con PlaceToPay') : __('Pagar con PlaceToPay') }}
+                                </button>
+                            </form>
+                            @if ($order->process_url)
+                                <a href="{{ $order->process_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-block btn-sm mt-2">
+                                    {{ __('Continuar sesión de pago abierta') }} &rarr;
+                                </a>
+                            @endif
+                        </div>
+                    @else
+                        <div class="alert alert-secondary small mb-0">
+                            <strong>{{ __('Estado de la Orden:') }}</strong> {{ $order->status }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
