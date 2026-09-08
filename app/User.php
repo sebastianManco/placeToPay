@@ -2,26 +2,13 @@
 
 namespace App;
 
+use App\Models\User as UserModel;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 
-use Illuminate\Database\Eloquent\Model;
-
-class User extends Model
+/**
+ * @deprecated Use App\Models\User instead.
+ */
+class User extends UserModel implements AuthenticatableContract
 {
-    protected $table = 'users';
-    protected $primaryKey = 'identification';
-    public $incrementing = false;
-    protected $fillable = [
-        'name',
-         'last_Name', 
-         'email', 
-         'phone', 
-         'direction',
-         'idenfication',
-         'user_Name',
-         'password',
-         'confirm_Password'
-        ];
-    
 }
-
 

@@ -9,15 +9,12 @@
 
     <title>{{ config('app.name', 'Laravel') }}</title>
 
-    <!-- Scripts -->
-    <script src="{{ asset('js/app.js') }}" defer></script>
-
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
 
-    <!-- Styles -->
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    <!-- Scripts & Styles -->
+    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
 <body>
     <div id="app">
@@ -33,7 +30,44 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav mr-auto">
-
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('showcase.index') }}">{{ __('Vitrina de Productos') }}</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center" href="{{ route('cart.index') }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cart3 mr-1" viewBox="0 0 16 16">
+                                    <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.472L4.415 11H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM3.102 4l.84 4.479 9.144-.459L13.89 4H3.102zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                                </svg>
+                                {{ __('Carrito') }}
+                                @php
+                                    $navCartService = app(\App\Services\CartService::class);
+                                    $navCart = $navCartService->getCart(Auth::user(), session()->getId());
+                                    $navCartCount = $navCart ? $navCart->getTotalQuantity() : 0;
+                                @endphp
+                                @if ($navCartCount > 0)
+                                    <span class="badge badge-pill badge-primary ml-1">{{ $navCartCount }}</span>
+                                @endif
+                            </a>
+                        </li>
+                        @auth
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('orders.index') }}">{{ __('Mis Pedidos') }}</a>
+                            </li>
+                            @if (Auth::user()->isAdmin())
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('admin.orders.index') }}">{{ __('Admin Pedidos') }}</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('admin.clients.index') }}">{{ __('Admin Clientes') }}</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('admin.products.index') }}">{{ __('Admin Productos') }}</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('admin.categories.index') }}">{{ __('Admin Categorías') }}</a>
+                                </li>
+                            @endif
+                        @endauth
                     </ul>
 
                     <!-- Right Side Of Navbar -->
@@ -51,10 +85,35 @@
                         @else
                             <li class="nav-item dropdown">
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
-                                    {{ Auth::user()->name }} <span class="caret"></span>
+                                    {{ Auth::user()->name }}
+                                    @if (Auth::user()->isAdmin())
+                                        <span class="badge bg-secondary ms-1">Admin</span>
+                                    @endif
+                                    <span class="caret"></span>
                                 </a>
 
                                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{{ route('orders.index') }}">
+                                        {{ __('Mis Pedidos') }}
+                                    </a>
+                                    @if (Auth::user()->isAdmin())
+                                        <div class="dropdown-divider"></div>
+                                        <h6 class="dropdown-header">{{ __('Administración') }}</h6>
+                                        <a class="dropdown-item" href="{{ route('admin.orders.index') }}">
+                                            {{ __('Gestión de Pedidos') }}
+                                        </a>
+                                        <a class="dropdown-item" href="{{ route('admin.clients.index') }}">
+                                            {{ __('Gestión de Clientes') }}
+                                        </a>
+                                        <a class="dropdown-item" href="{{ route('admin.products.index') }}">
+                                            {{ __('Gestión de Productos') }}
+                                        </a>
+                                        <a class="dropdown-item" href="{{ route('admin.categories.index') }}">
+                                            {{ __('Gestión de Categorías') }}
+                                        </a>
+                                    @endif
+                                    <div class="dropdown-divider"></div>
+
                                     <a class="dropdown-item" href="{{ route('logout') }}"
                                        onclick="event.preventDefault();
                                                      document.getElementById('logout-form').submit();">
