@@ -4,9 +4,11 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RegisterUserController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +27,16 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [DashboardController::class, 'index']);
 Route::get('/home', [DashboardController::class, 'index'])->name('home');
 Route::get('/showcase', [DashboardController::class, 'index'])->name('showcase.index');
+
+// Shopping cart and order review routes
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/items', [CartController::class, 'addItem'])->name('cart.items.store');
+Route::put('/cart/items/{itemId}', [CartController::class, 'updateItem'])->name('cart.items.update');
+Route::delete('/cart/items/{itemId}', [CartController::class, 'removeItem'])->name('cart.items.destroy');
+Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
+Route::get('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+Route::post('/cart/checkout/confirm', [CartController::class, 'confirm'])->name('cart.checkout.confirm');
+Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
 // Guest routes (Authentication & Registration)
 Route::middleware('guest')->group(function () {
