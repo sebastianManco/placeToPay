@@ -14,40 +14,167 @@
         </div>
     </div>
 
-    {{-- Filtros y Búsqueda --}}
+    {{-- Filtros y Búsqueda Personalizada --}}
     <div class="card shadow-sm mb-4 border-0">
-        <div class="card-body bg-light rounded">
-            <form method="GET" action="{{ route('dashboard') }}" class="form-row align-items-center">
-                <div class="col-md-5 my-1">
-                    <div class="input-group">
-                        <input type="text"
-                               name="search"
+        <div class="card-header bg-white border-0 pb-0 pt-3">
+            <h5 class="font-weight-bold text-dark mb-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-sliders mr-2 text-primary" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M11.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM9.05 3a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0V3h9.05zM4.5 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM2.05 8a2.5 2.5 0 0 1 4.9 0H16v1H6.95a2.5 2.5 0 0 1-4.9 0H0V8h2.05zm9.45 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2.45 1a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0v-1h9.05z"/>
+                </svg>
+                {{ __('Búsqueda Personalizada') }}
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url()->current() }}" id="search-form">
+                <div class="row">
+                    {{-- Búsqueda por texto --}}
+                    <div class="col-12 col-md-6 mb-3">
+                        <label for="search" class="small font-weight-bold text-muted mb-1">{{ __('Palabra clave') }}</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-light border-right-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-search text-muted" viewBox="0 0 16 16">
+                                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <input type="text"
+                                   id="search"
+                                   name="search"
+                                   class="form-control border-left-0"
+                                   placeholder="{{ __('Buscar producto por nombre o descripción...') }}"
+                                   value="{{ request('search') }}">
+                        </div>
+                    </div>
+
+                    {{-- Filtro por categoría --}}
+                    <div class="col-12 col-md-6 mb-3">
+                        <label for="category" class="small font-weight-bold text-muted mb-1">{{ __('Categoría') }}</label>
+                        <select id="category" name="category" class="custom-select">
+                            <option value="">{{ __('-- Todas las categorías --') }}</option>
+                            @foreach ($categories as $cat)
+                                <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>
+                                    {{ $cat->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Precio Mínimo --}}
+                    <div class="col-6 col-md-3 mb-3">
+                        <label for="min_price" class="small font-weight-bold text-muted mb-1">{{ __('Precio mín. ($)') }}</label>
+                        <input type="number"
+                               id="min_price"
+                               name="min_price"
+                               step="0.01"
+                               min="0"
                                class="form-control"
-                               placeholder="Buscar producto por nombre o descripción..."
-                               value="{{ request('search') }}">
+                               placeholder="{{ __('0.00') }}"
+                               value="{{ request('min_price') }}">
+                    </div>
+
+                    {{-- Precio Máximo --}}
+                    <div class="col-6 col-md-3 mb-3">
+                        <label for="max_price" class="small font-weight-bold text-muted mb-1">{{ __('Precio máx. ($)') }}</label>
+                        <input type="number"
+                               id="max_price"
+                               name="max_price"
+                               step="0.01"
+                               min="0"
+                               class="form-control"
+                               placeholder="{{ __('Sin límite') }}"
+                               value="{{ request('max_price') }}">
+                    </div>
+
+                    {{-- Ordenamiento --}}
+                    <div class="col-12 col-md-3 mb-3">
+                        <label for="sort_by" class="small font-weight-bold text-muted mb-1">{{ __('Ordenar por') }}</label>
+                        <select id="sort_by" name="sort_by" class="custom-select">
+                            <option value="name_asc" {{ request('sort_by') == 'name_asc' ? 'selected' : '' }}>{{ __('Nombre (A - Z)') }}</option>
+                            <option value="name_desc" {{ request('sort_by') == 'name_desc' ? 'selected' : '' }}>{{ __('Nombre (Z - A)') }}</option>
+                            <option value="price_asc" {{ request('sort_by') == 'price_asc' ? 'selected' : '' }}>{{ __('Precio (Menor a Mayor)') }}</option>
+                            <option value="price_desc" {{ request('sort_by') == 'price_desc' ? 'selected' : '' }}>{{ __('Precio (Mayor a Menor)') }}</option>
+                            <option value="newest" {{ request('sort_by') == 'newest' ? 'selected' : '' }}>{{ __('Más recientes') }}</option>
+                        </select>
+                    </div>
+
+                    {{-- Solo en stock --}}
+                    <div class="col-12 col-md-3 mb-3 d-flex align-items-center">
+                        <div class="custom-control custom-checkbox mt-md-3">
+                            <input type="checkbox"
+                                   class="custom-control-input"
+                                   id="in_stock"
+                                   name="in_stock"
+                                   value="1"
+                                   {{ request('in_stock') ? 'checked' : '' }}>
+                            <label class="custom-control-label small font-weight-bold text-secondary" for="in_stock">
+                                {{ __('Solo con stock disponible') }}
+                            </label>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-4 my-1">
-                    <select name="category" class="custom-select">
-                        <option value="">-- Todas las categorías --</option>
-                        @foreach ($categories as $cat)
-                            <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>
-                                {{ $cat->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3 my-1 d-flex">
-                    <button type="submit" class="btn btn-primary flex-grow-1 mr-2">
-                        {{ __('Filtrar') }}
-                    </button>
-                    @if(request('search') || request('category'))
-                        <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
+
+                <div class="d-flex justify-content-end align-items-center mt-2 flex-wrap">
+                    @if(request()->filled('search') || request()->filled('category') || request()->filled('min_price') || request()->filled('max_price') || request()->filled('in_stock') || (request()->filled('sort_by') && request('sort_by') !== 'name_asc'))
+                        <a href="{{ url()->current() }}" class="btn btn-outline-secondary mr-2 my-1">
                             {{ __('Limpiar') }}
                         </a>
                     @endif
+                    <button type="submit" class="btn btn-primary px-4 my-1">
+                        {{ __('Filtrar') }}
+                    </button>
                 </div>
             </form>
+
+            {{-- Resumen de Filtros Activos --}}
+            @php
+                $hasActiveFilters = request()->filled('search') || request()->filled('category') || request()->filled('min_price') || request()->filled('max_price') || request()->filled('in_stock') || (request()->filled('sort_by') && request('sort_by') !== 'name_asc');
+            @endphp
+            @if($hasActiveFilters)
+                <div class="mt-3 pt-3 border-top d-flex align-items-center flex-wrap" style="gap: 0.4rem;">
+                    <span class="small font-weight-bold text-muted mr-2">{{ __('Filtros aplicados:') }}</span>
+                    @if(request()->filled('search'))
+                        <span class="badge badge-light border text-dark px-2 py-1">
+                            {{ __('Texto:') }} "{{ request('search') }}"
+                        </span>
+                    @endif
+                    @if(request()->filled('category'))
+                        @php
+                            $activeCategory = $categories->firstWhere('id', request('category'));
+                        @endphp
+                        @if($activeCategory)
+                            <span class="badge badge-light border text-dark px-2 py-1">
+                                {{ __('Categoría:') }} {{ $activeCategory->name }}
+                            </span>
+                        @endif
+                    @endif
+                    @if(request()->filled('min_price'))
+                        <span class="badge badge-light border text-dark px-2 py-1">
+                            {{ __('Mín:') }} ${{ number_format((float) request('min_price'), 2, ',', '.') }}
+                        </span>
+                    @endif
+                    @if(request()->filled('max_price'))
+                        <span class="badge badge-light border text-dark px-2 py-1">
+                            {{ __('Máx:') }} ${{ number_format((float) request('max_price'), 2, ',', '.') }}
+                        </span>
+                    @endif
+                    @if(request()->filled('in_stock'))
+                        <span class="badge badge-success px-2 py-1">
+                            {{ __('Solo disponibles') }}
+                        </span>
+                    @endif
+                    @if(request()->filled('sort_by') && request('sort_by') !== 'name_asc')
+                        <span class="badge badge-info px-2 py-1">
+                            {{ __('Orden:') }} 
+                            @if(request('sort_by') === 'name_desc') {{ __('Z - A') }}
+                            @elseif(request('sort_by') === 'price_asc') {{ __('Menor precio') }}
+                            @elseif(request('sort_by') === 'price_desc') {{ __('Mayor precio') }}
+                            @elseif(request('sort_by') === 'newest') {{ __('Más recientes') }}
+                            @endif
+                        </span>
+                    @endif
+                </div>
+            @endif
         </div>
     </div>
 
@@ -108,6 +235,27 @@
                                         @endif
                                     </div>
                                 </div>
+
+                                {{-- Botón Añadir al carrito --}}
+                                <div class="mt-3">
+                                    @if ($product->stock > 0)
+                                        <button type="button" class="btn btn-outline-primary btn-sm btn-block d-flex align-items-center justify-content-center" data-product-id="{{ $product->id }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" class="bi bi-cart-plus mr-1" viewBox="0 0 16 16">
+                                                <path d="M9 5.5a.5.5 0 0 0-1 0V7H6.5a.5.5 0 0 0 0 1H8v1.5a.5.5 0 0 0 1 0V8h1.5a.5.5 0 0 0 0-1H9V5.5z"/>
+                                                <path d="M.5 1a.5.5 0 0 0 0 1h1.11l.401 1.607 1.498 7.985A.5.5 0 0 0 4 12h1a2 2 0 1 0 0 4 2 2 0 0 0 0-4h7a2 2 0 1 0 0 4 2 2 0 0 0 0-4h1a.5.5 0 0 0 .491-.408l1.5-8A.5.5 0 0 0 14.5 3H2.89l-.405-1.621A.5.5 0 0 0 2 1H.5zm3.915 10L3.102 4h10.796l-1.313 7h-8.17zM6 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm7 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                                            </svg>
+                                            {{ __('Añadir al carrito') }}
+                                        </button>
+                                    @else
+                                        <button type="button" class="btn btn-outline-secondary btn-sm btn-block disabled" disabled>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" class="bi bi-dash-circle mr-1" viewBox="0 0 16 16">
+                                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                                <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"/>
+                                            </svg>
+                                            {{ __('Agotado') }}
+                                        </button>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -129,14 +277,14 @@
                 </svg>
                 <h4 class="text-muted font-weight-bold">{{ __('No se encontraron productos') }}</h4>
                 <p class="text-muted mb-3">
-                    @if(request('search') || request('category'))
+                    @if(request()->filled('search') || request()->filled('category') || request()->filled('min_price') || request()->filled('max_price') || request()->filled('in_stock'))
                         {{ __('No hay productos que coincidan con los filtros de búsqueda ingresados.') }}
                     @else
                         {{ __('Actualmente no hay productos disponibles en la vitrina.') }}
                     @endif
                 </p>
-                @if(request('search') || request('category'))
-                    <a href="{{ route('dashboard') }}" class="btn btn-outline-primary btn-sm">
+                @if(request()->filled('search') || request()->filled('category') || request()->filled('min_price') || request()->filled('max_price') || request()->filled('in_stock'))
+                    <a href="{{ url()->current() }}" class="btn btn-outline-primary btn-sm">
                         {{ __('Ver todos los productos') }}
                     </a>
                 @endif

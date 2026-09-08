@@ -22,8 +22,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public routes
-Route::get('/', [HomeController::class, 'index']);
-Route::get('/home', [HomeController::class, 'index'])->name('home');
+Route::get('/', [DashboardController::class, 'index']);
+Route::get('/home', [DashboardController::class, 'index'])->name('home');
+Route::get('/showcase', [DashboardController::class, 'index'])->name('showcase.index');
 
 // Guest routes (Authentication & Registration)
 Route::middleware('guest')->group(function () {
@@ -51,7 +52,6 @@ Route::middleware('auth')->group(function () {
     // Verified users routes
     Route::middleware('verified')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        Route::get('/showcase', [DashboardController::class, 'index'])->name('showcase.index');
 
         // Admin routes
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {

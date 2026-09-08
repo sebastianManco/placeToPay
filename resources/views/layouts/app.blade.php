@@ -30,10 +30,10 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('showcase.index') }}">{{ __('Vitrina de Productos') }}</a>
+                        </li>
                         @auth
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('dashboard') }}">{{ __('Vitrina de Productos') }}</a>
-                            </li>
                             @if (Auth::user()->isAdmin())
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('admin.clients.index') }}">{{ __('Admin Clientes') }}</a>
