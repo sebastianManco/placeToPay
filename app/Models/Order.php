@@ -51,6 +51,8 @@ class Order extends Model
         'reference',
         'user_identification',
         'session_id',
+        'request_id',
+        'process_url',
         'status',
         'total_amount',
         'currency',
@@ -122,6 +124,94 @@ class Order extends Model
     public function getTotalQuantity(): int
     {
         return (int) $this->items()->sum('quantity');
+    }
+
+    /**
+     * Check if the order is currently approved.
+     *
+     * @return bool
+     */
+    public function isApproved(): bool
+    {
+        return $this->status === self::STATUS_APPROVED;
+    }
+
+    /**
+     * Check if the order is currently rejected.
+     *
+     * @return bool
+     */
+    public function isRejected(): bool
+    {
+        return $this->status === self::STATUS_REJECTED;
+    }
+
+    /**
+     * Check if the order is currently pending payment.
+     *
+     * @return bool
+     */
+    public function isPendingPayment(): bool
+    {
+        return $this->status === self::STATUS_PENDING_PAYMENT;
+    }
+
+    /**
+     * Determine whether the order can initiate or retry a payment.
+     *
+     * @return bool
+     */
+    public function canBePaid(): bool
+    {
+        return in_array($this->status, [self::STATUS_PENDING_PAYMENT, self::STATUS_REJECTED], true);
+    }
+
+    /**
+     * Transition order to approved status.
+     *
+     * @return void
+     */
+    public function markAsApproved(): void
+    {
+        $this->update(['status' => self::STATUS_APPROVED]);
+    }
+
+    /**
+     * Transition order to rejected status.
+     *
+     * @return void
+     */
+    public function markAsRejected(): void
+    {
+        $this->update(['status' => self::STATUS_REJECTED]);
+    }
+
+    /**
+     * Transition order to pending payment status.
+     *
+     * @return void
+     */
+    public function markAsPendingPayment(): void
+    {
+        $this->update(['status' => self::STATUS_PENDING_PAYMENT]);
+    }
+
+    /**
+     * Update order status mapped from PlaceToPay status code.
+     *
+     * @param  string  $gatewayStatus
+     * @return void
+     */
+    public function updateStatusFromGateway(string $gatewayStatus): void
+    {
+        $normalized = strtoupper(trim($gatewayStatus));
+
+        match ($normalized) {
+            'APPROVED' => $this->markAsApproved(),
+            'REJECTED', 'FAILED', 'PARTIAL_EXPIRED' => $this->markAsRejected(),
+            'PENDING', 'OK' => $this->markAsPendingPayment(),
+            default => null,
+        };
     }
 
     /**

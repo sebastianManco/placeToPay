@@ -10,6 +10,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RegisterUserController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,10 @@ Route::delete('/cart/items/{itemId}', [CartController::class, 'removeItem'])->na
 Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
 Route::get('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 Route::post('/cart/checkout/confirm', [CartController::class, 'confirm'])->name('cart.checkout.confirm');
+
+// PlaceToPay Payment Gateway Routes
+Route::post('/payment/notification', [PaymentController::class, 'webhook'])->name('payment.notification');
+Route::get('/payment/{order}/response', [PaymentController::class, 'processResponse'])->name('payment.response');
 
 // Guest routes (Authentication & Registration)
 Route::middleware('guest')->group(function () {
@@ -69,6 +74,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/my-orders', fn() => redirect()->route('orders.index'))->name('orders.my-orders');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::match(['get', 'post'], '/payment/{order}/pay', [PaymentController::class, 'pay'])->name('payment.pay');
 
         // Admin routes
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {

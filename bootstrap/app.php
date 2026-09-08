@@ -14,6 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
         ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'payment/notification',
+            'api/payment/notification',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
