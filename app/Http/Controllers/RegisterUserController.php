@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\RegisterUserRequest;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -36,6 +37,8 @@ class RegisterUserController extends Controller
             'password' => $validated['password'],
         ]);
 
+        event(new Registered($user));
+
         if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'User registered successfully.',
@@ -43,7 +46,7 @@ class RegisterUserController extends Controller
             ], 201);
         }
 
-        return redirect()->back()->with('success', 'User registered successfully.');
+        return redirect()->back()->with('success', 'User registered successfully. Please check your email for verification.');
     }
 }
 
