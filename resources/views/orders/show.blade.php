@@ -7,9 +7,21 @@
             <h1 class="h3 font-weight-bold text-dark mb-1">{{ __('Detalle de la Orden') }} #{{ $order->reference }}</h1>
             <p class="text-muted small mb-0">{{ __('Fecha:') }} {{ $order->created_at ? $order->created_at->format('d/m/Y H:i') : now()->format('d/m/Y H:i') }}</p>
         </div>
-        <a href="{{ route('showcase.index') }}" class="btn btn-outline-primary btn-sm">
-            {{ __('Volver a la Tienda') }}
-        </a>
+        <div>
+            @auth
+                <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary btn-sm mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock-history mr-1" viewBox="0 0 16 16">
+                        <path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.71a7.01 7.01 0 0 0-.439-.27l.493-.87a8.025 8.025 0 0 1 .974.606l-.552.834a6.974 6.974 0 0 0-.476-.3z"/>
+                        <path d="M7 3v5.2l4 2.4.8-1.3L8.5 7.2V3H7z"/>
+                        <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 1 0 0 14A7 7 0 0 0 8 1z"/>
+                    </svg>
+                    {{ __('Mis Pedidos') }}
+                </a>
+            @endauth
+            <a href="{{ route('showcase.index') }}" class="btn btn-outline-primary btn-sm">
+                {{ __('Volver a la Tienda') }}
+            </a>
+        </div>
     </div>
 
     @if (session('success'))
@@ -26,9 +38,17 @@
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header bg-white font-weight-bold py-3 d-flex justify-content-between align-items-center">
                     <span>{{ __('Resumen de Productos') }}</span>
-                    <span class="badge badge-warning px-3 py-2 text-uppercase" style="font-size: 0.85rem;">
-                        {{ $order->status === 'pending_payment' ? __('Pendiente de Pago') : $order->status }}
-                    </span>
+                    @if ($order->status === 'approved')
+                        <span class="badge badge-success px-3 py-2 text-uppercase" style="font-size: 0.85rem;">{{ __('Aprobada') }}</span>
+                    @elseif ($order->status === 'pending_payment')
+                        <span class="badge badge-warning px-3 py-2 text-uppercase text-dark" style="font-size: 0.85rem;">{{ __('Pendiente de Pago') }}</span>
+                    @elseif ($order->status === 'rejected')
+                        <span class="badge badge-danger px-3 py-2 text-uppercase" style="font-size: 0.85rem;">{{ __('Rechazada') }}</span>
+                    @elseif ($order->status === 'cancelled')
+                        <span class="badge badge-secondary px-3 py-2 text-uppercase" style="font-size: 0.85rem;">{{ __('Cancelada') }}</span>
+                    @else
+                        <span class="badge badge-info px-3 py-2 text-uppercase" style="font-size: 0.85rem;">{{ $order->status }}</span>
+                    @endif
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">

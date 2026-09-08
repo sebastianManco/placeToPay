@@ -50,7 +50,13 @@
                             </a>
                         </li>
                         @auth
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('orders.index') }}">{{ __('Mis Pedidos') }}</a>
+                            </li>
                             @if (Auth::user()->isAdmin())
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('admin.orders.index') }}">{{ __('Admin Pedidos') }}</a>
+                                </li>
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('admin.clients.index') }}">{{ __('Admin Clientes') }}</a>
                                 </li>
@@ -87,7 +93,15 @@
                                 </a>
 
                                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{{ route('orders.index') }}">
+                                        {{ __('Mis Pedidos') }}
+                                    </a>
                                     @if (Auth::user()->isAdmin())
+                                        <div class="dropdown-divider"></div>
+                                        <h6 class="dropdown-header">{{ __('Administración') }}</h6>
+                                        <a class="dropdown-item" href="{{ route('admin.orders.index') }}">
+                                            {{ __('Gestión de Pedidos') }}
+                                        </a>
                                         <a class="dropdown-item" href="{{ route('admin.clients.index') }}">
                                             {{ __('Gestión de Clientes') }}
                                         </a>
@@ -97,8 +111,8 @@
                                         <a class="dropdown-item" href="{{ route('admin.categories.index') }}">
                                             {{ __('Gestión de Categorías') }}
                                         </a>
-                                        <div class="dropdown-divider"></div>
                                     @endif
+                                    <div class="dropdown-divider"></div>
 
                                     <a class="dropdown-item" href="{{ route('logout') }}"
                                        onclick="event.preventDefault();
