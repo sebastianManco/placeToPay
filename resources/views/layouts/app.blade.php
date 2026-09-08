@@ -38,6 +38,12 @@
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('admin.clients.index') }}">{{ __('Admin Clientes') }}</a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('admin.products.index') }}">{{ __('Admin Productos') }}</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('admin.categories.index') }}">{{ __('Admin Categorías') }}</a>
+                                </li>
                             @endif
                         @endauth
                     </ul>
@@ -68,6 +74,12 @@
                                     @if (Auth::user()->isAdmin())
                                         <a class="dropdown-item" href="{{ route('admin.clients.index') }}">
                                             {{ __('Gestión de Clientes') }}
+                                        </a>
+                                        <a class="dropdown-item" href="{{ route('admin.products.index') }}">
+                                            {{ __('Gestión de Productos') }}
+                                        </a>
+                                        <a class="dropdown-item" href="{{ route('admin.categories.index') }}">
+                                            {{ __('Gestión de Categorías') }}
                                         </a>
                                         <div class="dropdown-divider"></div>
                                     @endif
