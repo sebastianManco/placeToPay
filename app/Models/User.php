@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
@@ -49,10 +50,14 @@ class User extends Authenticatable
         'email', 
         'phone', 
         'direction',
+        'Direction',
         'identification',
+        'user_name',
         'user_Name',
         'password',
-        'confirm_Password',
+        'email_verified_at',
+        'is_active',
+        'role',
     ];
 
     /**
@@ -62,7 +67,6 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
-        'confirm_Password',
         'remember_token',
     ];
 
@@ -76,7 +80,40 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Check if the user is an administrator.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Check if the user account is active.
+     */
+    public function isActive(): bool
+    {
+        return (bool) $this->is_active;
+    }
+
+    /**
+     * Get the user direction.
+     */
+    public function getDirectionAttribute(): ?string
+    {
+        return $this->attributes['Direction'] ?? $this->attributes['direction'] ?? null;
+    }
+
+    /**
+     * Set the user direction.
+     */
+    public function setDirectionAttribute(?string $value): void
+    {
+        $this->attributes['Direction'] = $value;
     }
 }
 

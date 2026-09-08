@@ -22,7 +22,6 @@ class UserAuthenticationTest extends TestCase
             'direction' => 'Avenue 2',
             'user_Name' => 'janedoe',
             'password' => 'password123',
-            'confirm_Password' => 'password123',
         ]);
 
         Auth::login($user);

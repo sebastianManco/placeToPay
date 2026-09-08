@@ -69,14 +69,12 @@ class UserAuthenticatableTest extends TestCase
             'direction' => 'Street 1',
             'user_Name' => 'johndoe',
             'password' => 'secret123',
-            'confirm_Password' => 'secret123',
             'remember_token' => 'token123',
         ]);
 
         $array = $user->toArray();
 
         $this->assertArrayNotHasKey('password', $array);
-        $this->assertArrayNotHasKey('confirm_Password', $array);
         $this->assertArrayNotHasKey('remember_token', $array);
         $this->assertArrayHasKey('name', $array);
         $this->assertArrayHasKey('identification', $array);
