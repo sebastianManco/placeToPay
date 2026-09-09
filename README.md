@@ -1,13 +1,13 @@
 # MercaTodo - Plataforma de Comercio Electrónico
 
-Plataforma integral de comercio electrónico de **MercaTodo** desarrollada en Laravel 11, equipada con pasarela de pagos PlaceToPay (Webcheckout), administración de inventario con importación/exportación masiva en Excel/CSV, módulo analítico de reportes y sistema de control de acceso basado en roles y permisos (ACL).
+Plataforma integral de comercio electrónico de **MercaTodo** desarrollada en Laravel 11, equipada con pasarela de pagos (Webcheckout), administración de inventario con importación/exportación masiva en Excel/CSV, módulo analítico de reportes y sistema de control de acceso basado en roles y permisos (ACL).
 
 Para consultar la especificación completa, contratos de datos y buenas prácticas de Postman, revisa:
-👉 **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)**
+**[API_DOCUMENTATION.md](API_DOCUMENTATION.md)**
 
 ---
 
-## 🚀 Guía Rápida para Servicios Externos (API REST v1)
+## Guía Rápida para Servicios Externos (API REST v1)
 
 Esta API permite a clientes externos (aplicaciones móviles, microservicios, plataformas de inventario o frontends desacoplados) consultar y administrar recursos de forma predecible y estandarizada.
 
@@ -47,7 +47,7 @@ En caso de error de validación (`422 Unprocessable Entity`):
 
 ### 4. Endpoints Principales
 
-#### 📦 Módulo de Categorías
+#### Módulo de Categorías
 | Método | Endpoint | Descripción |
 |---|---|---|
 | `GET` | `/api/v1/categories` | Lista paginada de categorías activas (filtro opcional: `search`). |
@@ -57,7 +57,7 @@ En caso de error de validación (`422 Unprocessable Entity`):
 | `DELETE` | `/api/v1/categories/{id}` | Eliminar categoría (valida que no tenga productos asociados). |
 | `GET` | `/api/v1/categories/{id}/products` | Lista de productos asociados a la categoría. |
 
-#### 🛒 Módulo de Productos
+#### Módulo de Productos
 | Método | Endpoint | Descripción |
 |---|---|---|
 | `GET` | `/api/v1/products` | Catálogo paginado con filtros (`search`, `category`, `in_stock`, `sort_by`, `per_page`, `page`). |
@@ -67,7 +67,7 @@ En caso de error de validación (`422 Unprocessable Entity`):
 | `PATCH` | `/api/v1/products/{id}/stock` | Ajuste directo de existencias en inventario (`stock`). |
 | `DELETE` | `/api/v1/products/{id}` | Eliminación de producto. |
 
-#### 📊 Módulo de Reportes Asíncronos
+#### Módulo de Reportes Asíncronos
 | Método | Endpoint | Descripción |
 |---|---|---|
 | `POST` | `/api/v1/reports` | Encola la generación de un reporte (`202 Accepted`). Retorna el `id` para seguimiento. |
@@ -87,7 +87,7 @@ En caso de error de validación (`422 Unprocessable Entity`):
 
 ---
 
-## 🛠️ Requisitos Técnicos del Entorno
+## Requisitos Técnicos del Entorno
 
 - **PHP**: ^8.2 (extensiones `pdo_mysql`, `bcmath`, `zip`, `gd`)
 - **Framework**: Laravel 11.x
