@@ -13,4 +13,7 @@ Homestead.yaml
 npm-debug.log
 yarn-error.log
 *.md
+!README.md
+!API_DOCUMENTATION.md
+
 
