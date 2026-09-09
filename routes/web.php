@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\DashboardController;
@@ -106,6 +107,13 @@ Route::middleware('auth')->group(function () {
             Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
             Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
             Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.update-status');
+
+            // Business intelligence & report generation routes
+            Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+            Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
+            Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
+            Route::get('/reports/{report}/download/{format?}', [ReportController::class, 'download'])->name('reports.download');
+            Route::get('/reports/{report}/status', [ReportController::class, 'status'])->name('reports.status');
         });
     });
 });

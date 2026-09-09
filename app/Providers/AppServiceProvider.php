@@ -23,6 +23,11 @@ class AppServiceProvider extends ServiceProvider
             \App\Contracts\ProductSpreadsheetServiceInterface::class,
             \App\Services\Product\ProductSpreadsheetService::class
         );
+
+        $this->app->bind(
+            \App\Contracts\ReportServiceInterface::class,
+            \App\Services\Report\ReportService::class
+        );
     }
 
     /**
