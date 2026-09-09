@@ -2,10 +2,16 @@
 
 @section('content')
 <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <h2>{{ __('Administración de Productos') }}</h2>
-        <div class="d-flex align-items-center gap-3">
-            <span class="badge bg-primary fs-6">{{ __('Total Productos: ') }} {{ $products->total() }}</span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary fs-6">{{ __('Total: ') }} {{ $products->total() }}</span>
+            <a href="{{ route('admin.products.export') }}" class="btn btn-outline-success" title="Descargar productos en Excel">
+                {{ __('Exportar Excel') }}
+            </a>
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importModal" title="Importar productos desde Excel">
+                {{ __('Importar Excel') }}
+            </button>
             <a href="{{ route('admin.products.create') }}" class="btn btn-success">
                 + {{ __('Crear Producto') }}
             </a>
@@ -15,6 +21,47 @@
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if (session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            {{ session('warning') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if (session('import_errors'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>{{ __('Detalle de errores en la importación:') }}</strong>
+            <div style="max-height: 200px; overflow-y: auto;" class="mt-2">
+                <ul class="mb-0 small">
+                    @foreach (session('import_errors') as $err)
+                        <li>
+                            <strong>Fila {{ $err['row'] }}:</strong>
+                            @foreach ($err['errors'] as $field => $messages)
+                                {{ implode(', ', (array) $messages) }}
+                            @endforeach
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if ($errors->has('file'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ $errors->first('file') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
@@ -134,6 +181,43 @@
                 {{ $products->links() }}
             </div>
         @endif
+    </div>
+
+    <!-- Modal Importar Excel -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="{{ route('admin.products.import') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="importModalLabel">{{ __('Importación Masiva de Productos') }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted small mb-2">
+                            Suba un archivo en formato <strong>.xlsx</strong> o <strong>.csv</strong> para registrar o actualizar productos de manera masiva.
+                        </p>
+                        <div class="alert alert-info py-2 small">
+                            <ul class="mb-0 ps-3">
+                                <li><strong>Actualización:</strong> Si la fila contiene la columna <code>id</code> con un producto existente, sus datos serán actualizados.</li>
+                                <li><strong>Creación:</strong> Si la columna <code>id</code> está vacía o no se incluye, se registrará un producto nuevo.</li>
+                                <li><strong>Columnas esperadas:</strong> <code>id</code>, <code>name</code>, <code>category</code>, <code>price</code>, <code>stock</code>, <code>is_active</code>, <code>description</code>.</li>
+                            </ul>
+                        </div>
+                        <div class="mb-3">
+                            <label for="file" class="form-label font-weight-bold">{{ __('Seleccionar archivo Excel / CSV') }}:</label>
+                            <input class="form-control" type="file" id="file" name="file" accept=".xlsx,.csv,.txt" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancelar') }}</button>
+                        <button type="submit" class="btn btn-primary">
+                            {{ __('Importar Productos') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 @endsection
