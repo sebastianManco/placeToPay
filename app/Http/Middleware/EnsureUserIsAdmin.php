@@ -15,8 +15,8 @@ class EnsureUserIsAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user() || ! $request->user()->isAdmin()) {
-            abort(403, 'Acceso denegado. Solo administradores pueden ingresar a este panel.');
+        if (! $request->user() || (! $request->user()->isAdmin() && ! $request->user()->hasAnyAdminPermission())) {
+            abort(403, 'Acceso denegado. Solo usuarios con permisos administrativos pueden ingresar a este panel.');
         }
 
         return $next($request);

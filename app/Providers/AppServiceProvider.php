@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -38,5 +40,32 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Paginator::useBootstrapFour();
+
+        // Superadmin bypass: users with admin role or legacy admin role pass all abilities
+        Gate::before(function ($user, $ability) {
+            if (method_exists($user, 'isAdmin') && $user->isAdmin()) {
+                return true;
+            }
+
+            return null;
+        });
+
+        // Granular permission check via Gate
+        Gate::after(function ($user, $ability) {
+            if (method_exists($user, 'hasPermission')) {
+                return $user->hasPermission($ability);
+            }
+
+            return false;
+        });
+
+        // Custom Blade directives
+        Blade::if('role', function ($role) {
+            return auth()->check() && auth()->user()->hasRole($role);
+        });
+
+        Blade::if('permission', function ($permission) {
+            return auth()->check() && auth()->user()->hasPermission($permission);
+        });
     }
 }
