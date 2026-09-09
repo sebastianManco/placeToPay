@@ -18,6 +18,11 @@ class AppServiceProvider extends ServiceProvider
             \App\Contracts\PaymentGatewayInterface::class,
             \App\Services\Payment\PlaceToPayGateway::class
         );
+
+        $this->app->bind(
+            \App\Contracts\ProductSpreadsheetServiceInterface::class,
+            \App\Services\Product\ProductSpreadsheetService::class
+        );
     }
 
     /**

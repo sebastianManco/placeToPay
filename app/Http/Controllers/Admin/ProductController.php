@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Contracts\ProductSpreadsheetServiceInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ImportProductRequest;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Category;
@@ -11,9 +13,17 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class ProductController extends Controller
 {
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct(
+        protected ProductSpreadsheetServiceInterface $spreadsheetService
+    ) {}
+
     /**
      * Display a listing of products.
      */
@@ -121,5 +131,42 @@ class ProductController extends Controller
         $statusText = $product->is_active ? 'habilitado' : 'inhabilitado';
 
         return redirect()->back()->with('success', "El producto \"{$product->name}\" ha sido {$statusText} correctamente.");
+    }
+
+    /**
+     * Export products to spreadsheet (.xlsx or .csv).
+     */
+    public function export(Request $request): Response
+    {
+        $format = $request->query('format', 'xlsx');
+        if (! in_array($format, ['xlsx', 'csv'], true)) {
+            $format = 'xlsx';
+        }
+
+        return $this->spreadsheetService->export($format);
+    }
+
+    /**
+     * Import products from uploaded spreadsheet.
+     */
+    public function import(ImportProductRequest $request): RedirectResponse
+    {
+        $file = $request->file('file');
+        $result = $this->spreadsheetService->import($file);
+
+        if ($result->hasErrors()) {
+            if ($result->hasSuccess()) {
+                return redirect()->route('admin.products.index')
+                    ->with('warning', $result->getSummaryMessage())
+                    ->with('import_errors', $result->errors);
+            }
+
+            return redirect()->route('admin.products.index')
+                ->with('error', $result->getSummaryMessage())
+                ->with('import_errors', $result->errors);
+        }
+
+        return redirect()->route('admin.products.index')
+            ->with('success', $result->getSummaryMessage());
     }
 }
