@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateClientRequest;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,7 +49,11 @@ class ClientController extends Controller
     {
         abort_if($client->role !== 'client', 404);
 
-        return view('admin.clients.edit', compact('client'));
+        $client->load('roles');
+        $roles = Role::orderBy('name')->get();
+        $clientRoles = $client->roles->pluck('id')->toArray();
+
+        return view('admin.clients.edit', compact('client', 'roles', 'clientRoles'));
     }
 
     /**
@@ -68,6 +73,10 @@ class ClientController extends Controller
             'direction' => $validated['direction'],
             'is_active' => $request->has('is_active') ? (bool) $request->input('is_active') : $client->is_active,
         ]);
+
+        if ($request->has('roles')) {
+            $client->syncRoles($request->input('roles', []));
+        }
 
         return redirect()->route('admin.clients.index')
             ->with('success', "El cliente {$client->name} {$client->last_Name} ha sido actualizado correctamente.");
