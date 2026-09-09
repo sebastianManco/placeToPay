@@ -52,6 +52,8 @@ class UpdateClientRequest extends FormRequest
             'phone' => ['required', 'string', 'max:20'],
             'direction' => ['required', 'string', 'max:100'],
             'is_active' => ['sometimes', 'boolean'],
+            'roles' => ['sometimes', 'array'],
+            'roles.*' => ['exists:roles,id'],
         ];
     }
 }

@@ -53,21 +53,34 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('orders.index') }}">{{ __('Mis Pedidos') }}</a>
                             </li>
-                            @if (Auth::user()->isAdmin())
+                            @if (Auth::user()->isAdmin() || Auth::user()->can('orders.view'))
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('admin.orders.index') }}">{{ __('Admin Pedidos') }}</a>
                                 </li>
+                            @endif
+                            @if (Auth::user()->isAdmin() || Auth::user()->can('clients.view'))
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('admin.clients.index') }}">{{ __('Admin Clientes') }}</a>
                                 </li>
+                            @endif
+                            @if (Auth::user()->isAdmin() || Auth::user()->can('products.view'))
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('admin.products.index') }}">{{ __('Admin Productos') }}</a>
                                 </li>
+                            @endif
+                            @if (Auth::user()->isAdmin() || Auth::user()->can('categories.view'))
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('admin.categories.index') }}">{{ __('Admin Categorías') }}</a>
                                 </li>
+                            @endif
+                            @if (Auth::user()->isAdmin() || Auth::user()->can('reports.view'))
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('admin.reports.index') }}">{{ __('Admin Reportes') }}</a>
+                                </li>
+                            @endif
+                            @if (Auth::user()->isAdmin() || Auth::user()->can('roles.view'))
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('admin.roles.index') }}">{{ __('Admin Roles (ACL)') }}</a>
                                 </li>
                             @endif
                         @endauth
@@ -99,24 +112,39 @@
                                     <a class="dropdown-item" href="{{ route('orders.index') }}">
                                         {{ __('Mis Pedidos') }}
                                     </a>
-                                    @if (Auth::user()->isAdmin())
+                                    @if (Auth::user()->isAdmin() || Auth::user()->hasAnyAdminPermission())
                                         <div class="dropdown-divider"></div>
                                         <h6 class="dropdown-header">{{ __('Administración') }}</h6>
-                                        <a class="dropdown-item" href="{{ route('admin.orders.index') }}">
-                                            {{ __('Gestión de Pedidos') }}
-                                        </a>
-                                        <a class="dropdown-item" href="{{ route('admin.clients.index') }}">
-                                            {{ __('Gestión de Clientes') }}
-                                        </a>
-                                        <a class="dropdown-item" href="{{ route('admin.products.index') }}">
-                                            {{ __('Gestión de Productos') }}
-                                        </a>
-                                        <a class="dropdown-item" href="{{ route('admin.categories.index') }}">
-                                            {{ __('Gestión de Categorías') }}
-                                        </a>
-                                        <a class="dropdown-item" href="{{ route('admin.reports.index') }}">
-                                            {{ __('Reportes del Sistema') }}
-                                        </a>
+                                        @if (Auth::user()->isAdmin() || Auth::user()->can('orders.view'))
+                                            <a class="dropdown-item" href="{{ route('admin.orders.index') }}">
+                                                {{ __('Gestión de Pedidos') }}
+                                            </a>
+                                        @endif
+                                        @if (Auth::user()->isAdmin() || Auth::user()->can('clients.view'))
+                                            <a class="dropdown-item" href="{{ route('admin.clients.index') }}">
+                                                {{ __('Gestión de Clientes') }}
+                                            </a>
+                                        @endif
+                                        @if (Auth::user()->isAdmin() || Auth::user()->can('products.view'))
+                                            <a class="dropdown-item" href="{{ route('admin.products.index') }}">
+                                                {{ __('Gestión de Productos') }}
+                                            </a>
+                                        @endif
+                                        @if (Auth::user()->isAdmin() || Auth::user()->can('categories.view'))
+                                            <a class="dropdown-item" href="{{ route('admin.categories.index') }}">
+                                                {{ __('Gestión de Categorías') }}
+                                            </a>
+                                        @endif
+                                        @if (Auth::user()->isAdmin() || Auth::user()->can('reports.view'))
+                                            <a class="dropdown-item" href="{{ route('admin.reports.index') }}">
+                                                {{ __('Reportes del Sistema') }}
+                                            </a>
+                                        @endif
+                                        @if (Auth::user()->isAdmin() || Auth::user()->can('roles.view'))
+                                            <a class="dropdown-item" href="{{ route('admin.roles.index') }}">
+                                                {{ __('Control de Acceso (ACL)') }}
+                                            </a>
+                                        @endif
                                     @endif
                                     <div class="dropdown-divider"></div>
 
