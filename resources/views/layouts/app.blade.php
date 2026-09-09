@@ -66,6 +66,9 @@
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('admin.categories.index') }}">{{ __('Admin Categorías') }}</a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('admin.reports.index') }}">{{ __('Admin Reportes') }}</a>
+                                </li>
                             @endif
                         @endauth
                     </ul>
@@ -110,6 +113,9 @@
                                         </a>
                                         <a class="dropdown-item" href="{{ route('admin.categories.index') }}">
                                             {{ __('Gestión de Categorías') }}
+                                        </a>
+                                        <a class="dropdown-item" href="{{ route('admin.reports.index') }}">
+                                            {{ __('Reportes del Sistema') }}
                                         </a>
                                     @endif
                                     <div class="dropdown-divider"></div>
