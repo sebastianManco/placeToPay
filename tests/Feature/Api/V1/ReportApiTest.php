@@ -22,19 +22,21 @@ class ReportApiTest extends TestCase
      */
     protected function createAdmin(): User
     {
-        return User::create([
+        $user = User::create([
             'identification' => 88000001,
             'name' => 'Report Admin',
-            'last_Name' => 'Tester',
+            'last_name' => 'Tester',
             'email' => 'admin@reports.test',
             'phone' => '3001234567',
             'direction' => 'Main Ave',
-            'user_Name' => 'reportadmin',
+            'user_name' => 'reportadmin',
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'admin',
         ]);
+        $user->syncRoles(['admin']);
+
+        return $user;
     }
 
     /**
@@ -45,7 +47,7 @@ class ReportApiTest extends TestCase
         return User::create([
             'identification' => 88000002,
             'name' => 'Report Client',
-            'last_Name' => 'Tester',
+            'last_name' => 'Tester',
             'email' => 'client@reports.test',
             'phone' => '3009990000',
             'direction' => 'Side Ave',

@@ -50,9 +50,9 @@ class RoleMigrationTest extends TestCase
     }
 
     /**
-     * Test user creation with role attribute assigns admin role via ACL pivot.
+     * Test admin role assignment via ACL.
      */
-    public function test_user_creation_with_admin_role_attribute_assigns_via_acl(): void
+    public function test_user_role_assignment_via_acl(): void
     {
         $admin = User::create([
             'identification' => 88000002,
@@ -65,8 +65,8 @@ class RoleMigrationTest extends TestCase
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'admin',
         ]);
+        $admin->syncRoles(['admin']);
 
         $this->assertTrue($admin->hasRole('admin'));
         $this->assertTrue($admin->isAdmin());

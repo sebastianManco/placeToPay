@@ -18,19 +18,25 @@ class AdminProductTest extends TestCase
      */
     protected function createAdmin(array $attributes = []): User
     {
-        return User::create(array_merge([
+        $role = $attributes['role'] ?? 'admin';
+        unset($attributes['role']);
+
+        $user = User::create(array_merge([
             'identification' => 50000001,
             'name' => 'Admin',
-            'last_Name' => 'System',
+            'last_name' => 'System',
             'email' => 'admin@example.com',
             'phone' => '123456789',
             'direction' => 'Headquarters',
-            'user_Name' => 'adminuser',
+            'user_name' => 'adminuser',
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'admin',
         ], $attributes));
+
+        $user->syncRoles([$role]);
+
+        return $user;
     }
 
     /**
@@ -44,11 +50,11 @@ class AdminProductTest extends TestCase
         return User::create(array_merge([
             'identification' => $num,
             'name' => "Client{$counter}",
-            'last_Name' => 'Test',
+            'last_name' => 'Test',
             'email' => "client{$counter}@example.com",
             'phone' => '3001234567',
             'direction' => 'Street 100',
-            'user_Name' => "clientuser{$counter}",
+            'user_name' => "clientuser{$counter}",
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,

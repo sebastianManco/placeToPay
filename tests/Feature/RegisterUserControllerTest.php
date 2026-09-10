@@ -60,7 +60,7 @@ class RegisterUserControllerTest extends TestCase
         $user = User::where('identification', 10203040)->first();
         $this->assertNotNull($user);
         $this->assertSame('John', $user->name);
-        $this->assertSame('Doe', $user->last_Name);
+        $this->assertSame('Doe', $user->last_name);
         $this->assertSame('john.doe@example.com', $user->email);
         $this->assertNotEquals('secret123', $user->password);
         $this->assertTrue(Hash::check('secret123', $user->password));

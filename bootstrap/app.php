@@ -18,6 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\EnsureUserHasPermission::class,
         ]);
 
+        $middleware->redirectTo(
+            guests: '/home/login',
+            users: '/dashboard'
+        );
+
         $middleware->validateCsrfTokens(except: [
             'payment/notification',
             'api/*',

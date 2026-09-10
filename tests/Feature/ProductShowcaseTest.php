@@ -17,11 +17,11 @@ class ProductShowcaseTest extends TestCase
         return User::create(array_merge([
             'identification' => 12345678,
             'name' => 'Cliente',
-            'last_Name' => 'Prueba',
+            'last_name' => 'Prueba',
             'email' => 'cliente@example.com',
             'phone' => '3001234567',
             'direction' => 'Calle 123 # 45 - 67',
-            'user_Name' => 'clienteprueba',
+            'user_name' => 'clienteprueba',
             'password' => 'secret1234',
             'email_verified_at' => now(),
             'is_active' => true,

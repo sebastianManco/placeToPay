@@ -30,7 +30,7 @@ class AclAccessControlTest extends TestCase
         return User::create(array_merge([
             'identification' => $id,
             'name' => "Client{$counter}",
-            'last_Name' => 'User',
+            'last_name' => 'User',
             'email' => "client{$counter}@example.com",
             'phone' => '3001234567',
             'direction' => 'Calle 1 # 2-3',
@@ -47,10 +47,13 @@ class AclAccessControlTest extends TestCase
         static $counter = 1;
         $id = 72000000 + ($counter++);
 
-        return User::create(array_merge([
+        $role = $attributes['role'] ?? 'admin';
+        unset($attributes['role']);
+
+        $user = User::create(array_merge([
             'identification' => $id,
             'name' => "Admin{$counter}",
-            'last_Name' => 'Boss',
+            'last_name' => 'Boss',
             'email' => "admin{$counter}@example.com",
             'phone' => '3007654321',
             'direction' => 'Avenida Principal # 10',
@@ -58,8 +61,11 @@ class AclAccessControlTest extends TestCase
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'admin',
         ], $attributes));
+
+        $user->syncRoles([$role]);
+
+        return $user;
     }
 
     public function test_guest_is_redirected_from_admin_panel(): void

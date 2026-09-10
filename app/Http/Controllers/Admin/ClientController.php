@@ -69,7 +69,7 @@ class ClientController extends Controller
 
         $client->update([
             'name' => $validated['name'],
-            'last_name' => $validated['last_name'] ?? $validated['last_Name'] ?? $client->last_name,
+            'last_name' => $validated['last_name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'],
             'direction' => $validated['direction'],

@@ -40,15 +40,14 @@ class CartServiceTest extends TestCase
         return User::create(array_merge([
             'identification' => 12345678,
             'name' => 'Comprador',
-            'last_Name' => 'Prueba',
+            'last_name' => 'Prueba',
             'email' => 'comprador@example.com',
             'phone' => '3001234567',
             'direction' => 'Calle 100 # 20 - 30',
-            'user_Name' => 'comprador1',
+            'user_name' => 'comprador1',
             'password' => 'secret1234',
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'client',
         ], $attributes));
     }
 
