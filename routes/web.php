@@ -102,6 +102,7 @@ Route::middleware('auth')->group(function () {
             });
             Route::middleware('permission:products.import')->group(function () {
                 Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
+                Route::get('/products/imports/{import}/status', [ProductController::class, 'importStatus'])->name('products.imports.status');
             });
             Route::middleware('permission:products.create')->group(function () {
                 Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
