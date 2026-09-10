@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
-                <!-- Required meta tags -->
+        <!-- Required meta tags -->
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <meta name="description" content="">    
+        <meta name="description" content="PlaceToPay Register">    
         <meta name="author" content="Sebastian Manco Valencia">
             
         @vite(['resources/sass/app.scss', 'resources/js/app.js'])
@@ -32,7 +32,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{url('home/registered')}}">
+                    <form method="POST" action="{{ route('register.store') }}">
 
                         @csrf   
                         
