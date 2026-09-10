@@ -45,6 +45,25 @@
         </div>
     @endif
 
+    @if (session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            {{ session('warning') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if ($order->status === 'refund_pending')
+        <div class="alert alert-warning border-0 shadow-sm mb-4" role="alert">
+            <h5 class="alert-heading fw-bold mb-1">Pago Recibido - Incidencia de Inventario en Proceso</h5>
+            <p class="mb-0 small">Tu transacción fue recibida por la pasarela de pagos, pero debido a agotamiento simultáneo de stock no fue posible despachar la orden inmediatamente. Nuestro equipo de atención al cliente ya fue notificado con máxima prioridad para gestionar tu entrega prioritaria o procesar tu reembolso.</p>
+        </div>
+    @elseif ($order->status === 'reversed')
+        <div class="alert alert-secondary border-0 shadow-sm mb-4" role="alert">
+            <h5 class="alert-heading fw-bold mb-1">Pago Revertido</h5>
+            <p class="mb-0 small">El cobro fue revertido automáticamente por la pasarela de pagos debido a falta de existencias de inventario. Los fondos han sido devueltos a tu medio de pago original.</p>
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-lg-8 mb-4">
             <div class="card shadow-sm border-0 mb-4">
@@ -58,6 +77,10 @@
                         <span class="badge bg-danger px-3 py-2 text-uppercase" style="font-size: 0.85rem;">{{ __('Rechazada') }}</span>
                     @elseif ($order->status === 'cancelled')
                         <span class="badge bg-secondary px-3 py-2 text-uppercase" style="font-size: 0.85rem;">{{ __('Cancelada') }}</span>
+                    @elseif ($order->status === 'refund_pending')
+                        <span class="badge bg-warning text-dark px-3 py-2 text-uppercase" style="font-size: 0.85rem;">{{ __('Reembolso Pendiente') }}</span>
+                    @elseif ($order->status === 'reversed')
+                        <span class="badge bg-dark px-3 py-2 text-uppercase" style="font-size: 0.85rem;">{{ __('Revertida') }}</span>
                     @else
                         <span class="badge bg-info text-dark px-3 py-2 text-uppercase" style="font-size: 0.85rem;">{{ $order->status }}</span>
                     @endif

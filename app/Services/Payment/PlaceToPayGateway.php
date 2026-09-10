@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -98,7 +99,7 @@ class PlaceToPayGateway implements PaymentGatewayInterface
     {
         $endpoint = rtrim($this->baseUrl, '/') . '/api/session';
 
-        $expiration = $options['expiration'] ?? Carbon::now()->addHours(24)->toIso8601String();
+        $expiration = $options['expiration'] ?? Carbon::now()->addMinutes(15)->toIso8601String();
         $returnUrl = $options['returnUrl'] ?? route('payment.response', $order->id);
         $ipAddress = $options['ipAddress'] ?? request()->ip() ?? '127.0.0.1';
         $userAgent = $options['userAgent'] ?? request()->userAgent() ?? 'PlaceToPay/1.0';
@@ -300,5 +301,91 @@ class PlaceToPayGateway implements PaymentGatewayInterface
     public function generateWebhookSignature(string|int $requestId, string $status, string $date): string
     {
         return hash_hmac('sha256', "{$requestId}{$status}{$date}", $this->tranKey);
+    }
+
+    /**
+     * Attempt an automated payment reversal or refund for the given order using PlaceToPay /api/reverse.
+     *
+     * @param  \App\Models\Order  $order
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function reversePayment(Order $order, array $options = []): array
+    {
+        $endpoint = rtrim($this->baseUrl, '/') . '/api/reverse';
+
+        $internalReference = $options['internalReference'] ?? null;
+
+        // If not provided in options, try to resolve from gateway session status
+        if (! $internalReference && $order->request_id) {
+            try {
+                $statusData = $this->getSessionStatus($order->request_id);
+                $payments = $statusData['payment'] ?? [];
+                if (! empty($payments) && is_array($payments)) {
+                    foreach ($payments as $payment) {
+                        if (! empty($payment['internalReference']) && ($payment['status']['status'] ?? '') === 'APPROVED') {
+                            $internalReference = $payment['internalReference'];
+                            break;
+                        }
+                    }
+                    if (! $internalReference && ! empty($payments[0]['internalReference'])) {
+                        $internalReference = $payments[0]['internalReference'];
+                    }
+                }
+            } catch (Exception $e) {
+                Log::warning("No se pudo obtener internalReference para reversión de orden #{$order->reference}: " . $e->getMessage());
+            }
+        }
+
+        if (! $internalReference) {
+            return [
+                'status' => [
+                    'status' => 'FAILED',
+                    'message' => 'No se encontró un internalReference válido para solicitar la reversión a PlaceToPay.',
+                ],
+            ];
+        }
+
+        $payload = [
+            'auth' => $this->generateAuth(),
+            'internalReference' => (int) $internalReference,
+        ];
+
+        try {
+            $response = Http::timeout($this->timeout)->post($endpoint, $payload);
+
+            if (! $response->successful()) {
+                Log::error("Error HTTP al revertir pago en PlaceToPay para orden #{$order->reference}: Código {$response->status()}");
+
+                return [
+                    'status' => [
+                        'status' => 'FAILED',
+                        'message' => "Error de comunicación con PlaceToPay al revertir: Código {$response->status()}",
+                    ],
+                ];
+            }
+
+            $data = $response->json();
+
+            if (! is_array($data)) {
+                return [
+                    'status' => [
+                        'status' => 'FAILED',
+                        'message' => 'Respuesta inválida recibida de PlaceToPay al solicitar reversión.',
+                    ],
+                ];
+            }
+
+            return $data;
+        } catch (Exception $e) {
+            Log::error("Excepción al revertir pago en PlaceToPay para orden #{$order->reference}: " . $e->getMessage());
+
+            return [
+                'status' => [
+                    'status' => 'FAILED',
+                    'message' => $e->getMessage(),
+                ],
+            ];
+        }
     }
 }

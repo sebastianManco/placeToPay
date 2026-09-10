@@ -128,7 +128,7 @@ class Psr6ApplicationCacheTest extends TestCase
         $admin = User::create([
             'identification' => 88000001,
             'name' => 'Admin',
-            'last_Name' => 'Cache',
+            'last_name' => 'Cache',
             'email' => 'admin.cache@test.com',
             'phone' => '3001234567',
             'direction' => 'Calle 100',
@@ -136,8 +136,8 @@ class Psr6ApplicationCacheTest extends TestCase
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'admin',
         ]);
+        $admin->syncRoles(['admin']);
         Sanctum::actingAs($admin, ['*']);
 
         $responseStock = $this->patchJson(route('api.v1.products.stock', ['product' => $product->id]), [
@@ -194,7 +194,6 @@ class Psr6ApplicationCacheTest extends TestCase
             'identification' => '1098765432',
             'name' => 'Carlos Gerente',
             'email' => 'carlos@example.com',
-            'role' => 'client',
         ]);
 
         $user->assignRole($role);

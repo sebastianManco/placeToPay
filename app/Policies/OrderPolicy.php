@@ -27,6 +27,10 @@ class OrderPolicy
             return true;
         }
 
+        if ($order->user_identification === null) {
+            return false;
+        }
+
         return (int) $order->user_identification === (int) $user->identification;
     }
 
@@ -37,6 +41,10 @@ class OrderPolicy
     {
         if ($user->isAdmin()) {
             return true;
+        }
+
+        if ($order->user_identification === null) {
+            return false;
         }
 
         return (int) $order->user_identification === (int) $user->identification && $order->isEditable();

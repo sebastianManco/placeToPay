@@ -15,19 +15,25 @@ class AdminClientTest extends TestCase
      */
     protected function createAdmin(array $attributes = []): User
     {
-        return User::create(array_merge([
+        $role = $attributes['role'] ?? 'admin';
+        unset($attributes['role']);
+
+        $user = User::create(array_merge([
             'identification' => 40000001,
             'name' => 'Admin',
-            'last_Name' => 'System',
+            'last_name' => 'System',
             'email' => 'admin@example.com',
             'phone' => '123456789',
             'direction' => 'Headquarters',
-            'user_Name' => 'adminuser',
+            'user_name' => 'adminuser',
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'admin',
         ], $attributes));
+
+        $user->syncRoles([$role]);
+
+        return $user;
     }
 
     /**
@@ -41,11 +47,11 @@ class AdminClientTest extends TestCase
         return User::create(array_merge([
             'identification' => $num,
             'name' => "Client{$counter}",
-            'last_Name' => 'Test',
+            'last_name' => 'Test',
             'email' => "client{$counter}@example.com",
             'phone' => '3001234567',
             'direction' => 'Street 100',
-            'user_Name' => "clientuser{$counter}",
+            'user_name' => "clientuser{$counter}",
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
@@ -82,8 +88,8 @@ class AdminClientTest extends TestCase
     public function test_admin_can_view_clients_list(): void
     {
         $admin = $this->createAdmin();
-        $clientA = $this->createClient(['name' => 'Maria', 'last_Name' => 'Gomez']);
-        $clientB = $this->createClient(['name' => 'Carlos', 'last_Name' => 'Perez']);
+        $clientA = $this->createClient(['name' => 'Maria', 'last_name' => 'Gomez']);
+        $clientB = $this->createClient(['name' => 'Carlos', 'last_name' => 'Perez']);
 
         $response = $this->actingAs($admin)->get('/admin/clients');
 
@@ -189,7 +195,7 @@ class AdminClientTest extends TestCase
         $admin = $this->createAdmin();
         $client = $this->createClient([
             'name' => 'Alejandro',
-            'last_Name' => 'Ramirez',
+            'last_name' => 'Ramirez',
             'email' => 'alejandro@example.com',
         ]);
 
@@ -208,7 +214,7 @@ class AdminClientTest extends TestCase
     public function test_admin_cannot_edit_non_client_user(): void
     {
         $admin = $this->createAdmin();
-        $anotherAdmin = $this->createAdmin(['identification' => 40000002, 'email' => 'admin2@example.com', 'user_Name' => 'admin2']);
+        $anotherAdmin = $this->createAdmin(['identification' => 40000002, 'email' => 'admin2@example.com', 'user_name' => 'admin2']);
 
         $response = $this->actingAs($admin)->get("/admin/clients/{$anotherAdmin->identification}/edit");
 
@@ -223,7 +229,7 @@ class AdminClientTest extends TestCase
         $admin = $this->createAdmin();
         $client = $this->createClient([
             'name' => 'OriginalName',
-            'last_Name' => 'OriginalLast',
+            'last_name' => 'OriginalLast',
             'email' => 'original@example.com',
             'phone' => '3000000000',
             'direction' => 'Original Address',
@@ -232,7 +238,7 @@ class AdminClientTest extends TestCase
 
         $updateData = [
             'name' => 'UpdatedName',
-            'last_Name' => 'UpdatedLast',
+            'last_name' => 'UpdatedLast',
             'email' => 'updated@example.com',
             'phone' => '3119998877',
             'direction' => 'Updated Boulevard 45',
@@ -247,7 +253,7 @@ class AdminClientTest extends TestCase
 
         $client->refresh();
         $this->assertSame('UpdatedName', $client->name);
-        $this->assertSame('UpdatedLast', $client->last_Name);
+        $this->assertSame('UpdatedLast', $client->last_name);
         $this->assertSame('updated@example.com', $client->email);
         $this->assertSame('3119998877', $client->phone);
         $this->assertSame('Updated Boulevard 45', $client->direction);
@@ -264,7 +270,7 @@ class AdminClientTest extends TestCase
 
         $updateData = [
             'name' => 'NewNameSameEmail',
-            'last_Name' => 'NewLastName',
+            'last_name' => 'NewLastName',
             'email' => 'sameemail@example.com',
             'phone' => '3123456789',
             'direction' => 'Street 123',
@@ -292,7 +298,7 @@ class AdminClientTest extends TestCase
         $response = $this->actingAs($admin)->from("/admin/clients/{$clientA->identification}/edit")
             ->put("/admin/clients/{$clientA->identification}", [
                 'name' => 'ClientA Modified',
-                'last_Name' => 'Modified',
+                'last_name' => 'Modified',
                 'email' => 'clientB@example.com', // Duplicate email from clientB
                 'phone' => '3001112233',
                 'direction' => 'Street 99',
@@ -314,14 +320,14 @@ class AdminClientTest extends TestCase
 
         $response = $this->actingAs($admin)->put("/admin/clients/{$client->identification}", [
             'name' => '',
-            'last_Name' => '',
+            'last_name' => '',
             'email' => 'not-an-email',
             'phone' => '',
             'direction' => '',
         ]);
 
         $response->assertStatus(302);
-        $response->assertSessionHasErrors(['name', 'last_Name', 'email', 'phone', 'direction']);
+        $response->assertSessionHasErrors(['name', 'last_name', 'email', 'phone', 'direction']);
     }
 
     /**

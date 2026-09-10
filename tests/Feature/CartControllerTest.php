@@ -19,11 +19,11 @@ class CartControllerTest extends TestCase
         return User::create(array_merge([
             'identification' => 12345678,
             'name' => 'Cliente',
-            'last_Name' => 'Prueba',
+            'last_name' => 'Prueba',
             'email' => 'cliente@example.com',
             'phone' => '3001234567',
             'direction' => 'Calle 123 # 45 - 67',
-            'user_Name' => 'clienteprueba',
+            'user_name' => 'clienteprueba',
             'password' => 'secret1234',
             'email_verified_at' => now(),
             'is_active' => true,
@@ -239,5 +239,90 @@ class CartControllerTest extends TestCase
 
         $response->assertRedirect(route('orders.show', $order->id));
         $response->assertSessionHas('success');
+    }
+
+    /**
+     * Test guest cannot access checkout page and is redirected to login.
+     */
+    public function test_guest_cannot_access_checkout_and_is_redirected_to_login(): void
+    {
+        $response = $this->get(route('cart.checkout'));
+
+        $response->assertRedirect(route('login'));
+    }
+
+    /**
+     * Test guest cannot confirm order and is redirected to login.
+     */
+    public function test_guest_cannot_confirm_order_and_is_redirected_to_login(): void
+    {
+        $response = $this->post(route('cart.checkout.confirm'), [
+            'customer_name' => 'Invitado No Permitido',
+            'customer_email' => 'invitado@example.com',
+            'customer_phone' => '3001234567',
+            'customer_address' => 'Calle 10 # 20 - 30',
+        ]);
+
+        $response->assertRedirect(route('login'));
+    }
+
+    /**
+     * Test that guest cart items are preserved and migrated to user account upon login.
+     */
+    public function test_guest_cart_is_migrated_to_user_upon_login_and_accessible_in_checkout(): void
+    {
+        $client = $this->createClientUser(['password' => 'password123']);
+        $product = $this->createProduct(['name' => 'Harina PAN 1kg', 'price' => 6000.00, 'stock' => 10]);
+
+        // Guest adds product to cart
+        $this->post(route('cart.items.store'), [
+            'product_id' => $product->id,
+            'quantity' => 3,
+        ]);
+
+        $guestCart = Order::whereNull('user_identification')->where('status', Order::STATUS_IN_CART)->first();
+        $this->assertNotNull($guestCart);
+        $this->assertEquals(18000.00, (float) $guestCart->total_amount);
+
+        // Guest logs in
+        $loginResponse = $this->withSession(['guest_cart_session_id' => $guestCart->session_id])
+            ->post('/login', [
+                'email' => $client->email,
+                'password' => 'password123',
+            ]);
+
+        $loginResponse->assertRedirect();
+        $this->assertAuthenticatedAs($client);
+
+        // The cart is now attached to the client
+        $userCart = Order::where('user_identification', $client->identification)
+            ->where('status', Order::STATUS_IN_CART)
+            ->first();
+        $this->assertNotNull($userCart);
+        $this->assertEquals(18000.00, (float) $userCart->total_amount);
+
+        // Authenticated client accesses checkout
+        $checkoutResponse = $this->actingAs($client)->get(route('cart.checkout'));
+        $checkoutResponse->assertStatus(200);
+        $checkoutResponse->assertSee('Harina PAN 1kg');
+
+        // Authenticated client confirms checkout
+        $confirmResponse = $this->actingAs($client)->post(route('cart.checkout.confirm'), [
+            'customer_name' => $client->name . ' ' . $client->last_name,
+            'customer_email' => $client->email,
+            'customer_phone' => $client->phone,
+            'customer_address' => $client->direction,
+        ]);
+
+        $confirmedOrder = Order::where('status', Order::STATUS_PENDING_PAYMENT)->first();
+        $this->assertNotNull($confirmedOrder);
+        $this->assertEquals($client->identification, $confirmedOrder->user_identification);
+
+        // Redirection to orders.show works and client has policy permission to view it
+        $confirmResponse->assertRedirect(route('orders.show', $confirmedOrder->id));
+
+        $orderShowResponse = $this->actingAs($client)->get(route('orders.show', $confirmedOrder->id));
+        $orderShowResponse->assertStatus(200);
+        $orderShowResponse->assertSee($confirmedOrder->reference);
     }
 }

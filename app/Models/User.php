@@ -28,18 +28,14 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $fillable = [
         'name',
         'last_name',
-        'last_Name', 
-        'email', 
-        'phone', 
+        'email',
+        'phone',
         'direction',
-        'Direction',
         'identification',
         'user_name',
-        'user_Name',
         'password',
         'email_verified_at',
         'is_active',
-        'role',
     ];
 
     /**
@@ -67,52 +63,26 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Temporary storage for role assignment during model creation/save.
-     */
-    protected ?string $transientRole = null;
-
-    /**
      * The "booted" method of the model.
      */
     protected static function booted(): void
     {
         static::saved(function (User $user) {
-            if ($user->transientRole !== null) {
-                $roleToSync = $user->transientRole;
-                $user->transientRole = null;
-                $user->syncRoles([$roleToSync]);
-            } elseif ($user->roles()->count() === 0) {
+            if ($user->roles()->count() === 0) {
                 $user->assignRole('client');
             }
         });
     }
 
     /**
-     * Accessor for legacy role attribute.
-     * Returns the primary ACL role slug for backward compatibility.
-     *
-     * @deprecated Use $user->roles or $user->hasRole() instead.
+     * Accessor for user role attribute.
+     * Returns the primary ACL role slug.
      */
     public function getRoleAttribute(): ?string
     {
-        return $this->roles->first()?->slug ?? 'client';
-    }
+        $primary = $this->roles->first(fn ($role) => $role->slug !== 'client');
 
-    /**
-     * Mutator for legacy role attribute.
-     * Assigns the role through the ACL pivot relation.
-     *
-     * @deprecated Use $user->assignRole() or $user->syncRoles() instead.
-     */
-    public function setRoleAttribute(?string $value): void
-    {
-        if ($this->exists) {
-            if ($value) {
-                $this->syncRoles([$value]);
-            }
-        } else {
-            $this->transientRole = $value;
-        }
+        return $primary?->slug ?? $this->roles->first()?->slug ?? 'client';
     }
 
     /**
@@ -129,54 +99,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isActive(): bool
     {
         return (bool) $this->is_active;
-    }
-
-    /**
-     * Get the user direction.
-     */
-    public function getDirectionAttribute(): ?string
-    {
-        return $this->attributes['direction'] ?? $this->attributes['Direction'] ?? null;
-    }
-
-    /**
-     * Set the user direction.
-     */
-    public function setDirectionAttribute(?string $value): void
-    {
-        $this->attributes['direction'] = $value;
-    }
-
-    /**
-     * Get the user last name.
-     */
-    public function getLastNameAttribute(): ?string
-    {
-        return $this->attributes['last_name'] ?? $this->attributes['last_Name'] ?? null;
-    }
-
-    /**
-     * Set the user last name.
-     */
-    public function setLastNameAttribute(?string $value): void
-    {
-        $this->attributes['last_name'] = $value;
-    }
-
-    /**
-     * Get the user username.
-     */
-    public function getUserNameAttribute(): ?string
-    {
-        return $this->attributes['user_name'] ?? $this->attributes['user_Name'] ?? null;
-    }
-
-    /**
-     * Set the user username.
-     */
-    public function setUserNameAttribute(?string $value): void
-    {
-        $this->attributes['user_name'] = $value;
     }
 
     /**

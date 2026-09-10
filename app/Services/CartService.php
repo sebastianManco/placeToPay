@@ -221,6 +221,10 @@ class CartService
      */
     public function confirmOrder(Order $cart, array $customerData): Order
     {
+        if (empty($cart->user_identification)) {
+            throw new InvalidArgumentException('Debe identificarse para confirmar la compra.');
+        }
+
         $items = $cart->items()->with('product')->get();
 
         if ($items->isEmpty()) {
@@ -247,6 +251,82 @@ class CartService
             ]);
 
             return $cart->fresh(['items']);
+        });
+    }
+
+    /**
+     * Migrate guest session cart to the authenticated user upon login.
+     *
+     * @param  \App\Models\User  $user
+     * @param  string|null  $previousSessionId
+     * @param  string|null  $newSessionId
+     * @return \App\Models\Order|null
+     */
+    public function migrateGuestCart(User $user, ?string $previousSessionId, ?string $newSessionId = null): ?Order
+    {
+        if (! $previousSessionId) {
+            return null;
+        }
+
+        /** @var \App\Models\Order|null $sessionCart */
+        $sessionCart = Order::where('session_id', $previousSessionId)
+            ->whereNull('user_identification')
+            ->where('status', Order::STATUS_IN_CART)
+            ->first();
+
+        if (! $sessionCart) {
+            return null;
+        }
+
+        /** @var \App\Models\Order|null $userCart */
+        $userCart = Order::where('user_identification', $user->identification)
+            ->where('status', Order::STATUS_IN_CART)
+            ->first();
+
+        if (! $userCart) {
+            $sessionCart->update([
+                'user_identification' => $user->identification,
+                'session_id' => $newSessionId,
+            ]);
+
+            return $sessionCart->fresh();
+        }
+
+        return DB::transaction(function () use ($userCart, $sessionCart, $newSessionId) {
+            foreach ($sessionCart->items as $sessionItem) {
+                /** @var \App\Models\OrderItem|null $existingItem */
+                $existingItem = $userCart->items()->where('product_id', $sessionItem->product_id)->first();
+
+                if ($existingItem) {
+                    $newQty = $existingItem->quantity + $sessionItem->quantity;
+                    $maxStock = $sessionItem->product->stock;
+                    $cappedQty = min($newQty, $maxStock);
+
+                    $existingItem->update([
+                        'quantity' => $cappedQty,
+                        'subtotal' => bcmul((string) $existingItem->unit_price, (string) $cappedQty, 2),
+                    ]);
+                } else {
+                    $userCart->items()->create([
+                        'product_id' => $sessionItem->product_id,
+                        'product_name' => $sessionItem->product_name,
+                        'unit_price' => $sessionItem->unit_price,
+                        'quantity' => $sessionItem->quantity,
+                        'subtotal' => $sessionItem->subtotal,
+                    ]);
+                }
+            }
+
+            if ($newSessionId) {
+                $userCart->update(['session_id' => $newSessionId]);
+            }
+
+            $userCart->recalculateTotal();
+
+            $sessionCart->items()->delete();
+            $sessionCart->delete();
+
+            return $userCart->fresh(['items']);
         });
     }
 }

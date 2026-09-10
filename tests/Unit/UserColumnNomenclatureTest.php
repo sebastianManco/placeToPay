@@ -49,9 +49,9 @@ class UserColumnNomenclatureTest extends TestCase
     }
 
     /**
-     * Test backward compatibility accessors for legacy casing conventions.
+     * Test updating user with canonical snake_case attribute names.
      */
-    public function test_user_model_supports_backward_compatibility_accessors_and_mutators(): void
+    public function test_user_can_be_updated_with_canonical_snake_case_attributes(): void
     {
         $user = User::create([
             'identification' => 77770002,
@@ -64,18 +64,10 @@ class UserColumnNomenclatureTest extends TestCase
             'password' => 'secret1234',
         ]);
 
-        // Legacy accessors
-        $this->assertSame('Gomez', $user->last_Name);
-        $this->assertSame('Gomez', $user->lastName);
-        $this->assertSame('Calle 100 # 15-20', $user->Direction);
-        $this->assertSame('carlosg', $user->user_Name);
-        $this->assertSame('carlosg', $user->userName);
-
-        // Update via legacy attribute keys
         $user->update([
-            'last_Name' => 'Rodriguez',
-            'Direction' => 'Diagonal 45 # 10-30',
-            'user_Name' => 'crodriguez',
+            'last_name' => 'Rodriguez',
+            'direction' => 'Diagonal 45 # 10-30',
+            'user_name' => 'crodriguez',
         ]);
 
         $fresh = $user->fresh();

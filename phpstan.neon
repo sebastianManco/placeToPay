@@ -13,6 +13,3 @@ parameters:
 
     # Nivel de análisis (0-9). Nivel 5 es el recomendado por defecto en Larastan.
     level: 5
-
-    excludePaths:
-        - app/Http/Middleware/TrustProxies.php

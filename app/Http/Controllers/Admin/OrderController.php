@@ -111,7 +111,7 @@ class OrderController extends Controller
         $this->authorize('updateStatus', $order);
 
         $validated = $request->validate([
-            'status' => 'required|string|in:in_cart,pending_payment,approved,rejected,cancelled',
+            'status' => 'required|string|in:in_cart,pending_payment,approved,rejected,cancelled,refund_pending,reversed',
         ]);
 
         $order->update([
@@ -124,6 +124,8 @@ class OrderController extends Controller
             'approved' => 'Aprobado',
             'rejected' => 'Rechazado',
             'cancelled' => 'Cancelado',
+            'refund_pending' => 'Reembolso Pendiente',
+            'reversed' => 'Revertido',
         ];
 
         $statusLabel = $statusLabels[$validated['status']] ?? $validated['status'];

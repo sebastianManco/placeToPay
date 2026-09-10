@@ -40,7 +40,13 @@ class CartController extends Controller
      */
     private function resolveCart(Request $request): Order
     {
-        return $this->cartService->getCart($request->user(), $request->session()->getId());
+        $cart = $this->cartService->getCart($request->user(), $request->session()->getId());
+
+        if (! $request->user() && $cart->session_id) {
+            $request->session()->put('guest_cart_session_id', $cart->session_id);
+        }
+
+        return $cart;
     }
 
     /**
@@ -187,6 +193,10 @@ class CartController extends Controller
         ]);
 
         $cart = $this->resolveCart($request);
+
+        if ($request->user() && empty($cart->user_identification)) {
+            $cart->update(['user_identification' => $request->user()->identification]);
+        }
 
         try {
             $order = $this->cartService->confirmOrder($cart, $validated);

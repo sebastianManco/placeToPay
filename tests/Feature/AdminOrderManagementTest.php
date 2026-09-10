@@ -15,19 +15,21 @@ class AdminOrderManagementTest extends TestCase
 
     protected function createAdmin(): User
     {
-        return User::create([
+        $user = User::create([
             'identification' => 70000001,
             'name' => 'Admin',
-            'last_Name' => 'Supervisor',
+            'last_name' => 'Supervisor',
             'email' => 'admin_orders_test@example.com',
             'phone' => '123456789',
             'direction' => 'Calle Principal 1',
-            'user_Name' => 'adminsuper',
+            'user_name' => 'adminsuper',
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'admin',
         ]);
+        $user->syncRoles(['admin']);
+
+        return $user;
     }
 
     protected function createClient(array $attributes = []): User
@@ -38,11 +40,11 @@ class AdminOrderManagementTest extends TestCase
         return User::create(array_merge([
             'identification' => $id,
             'name' => "Cliente{$counter}",
-            'last_Name' => 'Apellido',
+            'last_name' => 'Apellido',
             'email' => "cliente{$counter}@admintest.com",
             'phone' => '3007654321',
             'direction' => 'Carrera 7 # 100 - 20',
-            'user_Name' => "clientadm{$counter}",
+            'user_name' => "clientadm{$counter}",
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
@@ -69,7 +71,7 @@ class AdminOrderManagementTest extends TestCase
             'status' => Order::STATUS_PENDING_PAYMENT,
             'total_amount' => 19000.00,
             'currency' => 'COP',
-            'customer_name' => $user->name . ' ' . $user->last_Name,
+            'customer_name' => $user->name . ' ' . $user->last_name,
             'customer_email' => $user->email,
             'customer_phone' => $user->phone,
             'customer_address' => $user->direction,
@@ -96,8 +98,8 @@ class AdminOrderManagementTest extends TestCase
     public function test_admin_can_filter_orders_by_client(): void
     {
         $admin = $this->createAdmin();
-        $clientTarget = $this->createClient(['name' => 'Carlos', 'last_Name' => 'Gomez', 'email' => 'carlos@example.com']);
-        $clientOther = $this->createClient(['name' => 'Maria', 'last_Name' => 'Lopez', 'email' => 'maria@example.com']);
+        $clientTarget = $this->createClient(['name' => 'Carlos', 'last_name' => 'Gomez', 'email' => 'carlos@example.com']);
+        $clientOther = $this->createClient(['name' => 'Maria', 'last_name' => 'Lopez', 'email' => 'maria@example.com']);
 
         $orderTarget = $this->createOrder($clientTarget, ['reference' => 'ORD-CARLOS-99']);
         $orderOther = $this->createOrder($clientOther, ['reference' => 'ORD-MARIA-88']);

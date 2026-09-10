@@ -48,6 +48,10 @@
                             <span class="badge bg-danger px-3 py-2 text-uppercase">{{ __('Rechazada') }}</span>
                         @elseif ($order->status === 'cancelled')
                             <span class="badge bg-secondary px-3 py-2 text-uppercase">{{ __('Cancelada') }}</span>
+                        @elseif ($order->status === 'refund_pending')
+                            <span class="badge bg-warning text-dark px-3 py-2 text-uppercase">{{ __('Reembolso Pendiente') }}</span>
+                        @elseif ($order->status === 'reversed')
+                            <span class="badge bg-dark px-3 py-2 text-uppercase">{{ __('Revertida') }}</span>
                         @elseif ($order->status === 'in_cart')
                             <span class="badge bg-info px-3 py-2 text-uppercase text-dark">{{ __('En Carrito') }}</span>
                         @else
@@ -127,6 +131,12 @@
                                 </option>
                                 <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>
                                     {{ __('Cancelado') }}
+                                </option>
+                                <option value="refund_pending" {{ $order->status === 'refund_pending' ? 'selected' : '' }}>
+                                    {{ __('Reembolso Pendiente') }}
+                                </option>
+                                <option value="reversed" {{ $order->status === 'reversed' ? 'selected' : '' }}>
+                                    {{ __('Revertido') }}
                                 </option>
                                 <option value="in_cart" {{ $order->status === 'in_cart' ? 'selected' : '' }}>
                                     {{ __('En Carrito') }}

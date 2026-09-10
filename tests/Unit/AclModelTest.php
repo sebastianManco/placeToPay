@@ -20,10 +20,13 @@ class AclModelTest extends TestCase
         static $counter = 1;
         $id = 70000000 + ($counter++);
 
-        return User::create(array_merge([
+        $role = $attributes['role'] ?? 'client';
+        unset($attributes['role']);
+
+        $user = User::create(array_merge([
             'identification' => $id,
             'name' => "User{$counter}",
-            'last_Name' => 'Tester',
+            'last_name' => 'Tester',
             'email' => "acl_user{$counter}@example.com",
             'phone' => '3009998888',
             'direction' => 'Calle 100 # 20',
@@ -31,8 +34,11 @@ class AclModelTest extends TestCase
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'client',
         ], $attributes));
+
+        $user->syncRoles([$role]);
+
+        return $user;
     }
 
     public function test_can_create_role_and_assign_permissions(): void

@@ -75,15 +75,13 @@
                         <input type="text"
                                id="last_name"
                                name="last_name"
-                               class="form-control @if($errors->has('last_name') || $errors->has('last_Name')) is-invalid @endif"
-                               value="{{ old('last_name', old('last_Name', $client->last_name)) }}"
+                               class="form-control @error('last_name') is-invalid @enderror"
+                               value="{{ old('last_name', $client->last_name) }}"
                                required
                                maxlength="50">
-                        @if($errors->has('last_name'))
-                            <div class="invalid-feedback">{{ $errors->first('last_name') }}</div>
-                        @elseif($errors->has('last_Name'))
-                            <div class="invalid-feedback">{{ $errors->first('last_Name') }}</div>
-                        @endif
+                        @error('last_name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <!-- Email -->
