@@ -16,6 +16,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        $this->app->singleton(\Psr\Cache\CacheItemPoolInterface::class, function ($app) {
+            return new \App\Services\Cache\Psr6CachePool($app->make(\Illuminate\Contracts\Cache\Repository::class));
+        });
+
+        $this->app->alias(\Psr\Cache\CacheItemPoolInterface::class, \App\Services\Cache\Psr6CachePool::class);
+
+        $this->app->singleton(\App\Services\Cache\CacheVersionManager::class, function ($app) {
+            return new \App\Services\Cache\CacheVersionManager($app->make(\Psr\Cache\CacheItemPoolInterface::class));
+        });
+
         $this->app->bind(
             \App\Contracts\PaymentGatewayInterface::class,
             \App\Services\Payment\PlaceToPayGateway::class
@@ -40,6 +50,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Paginator::useBootstrapFour();
+
+        // Model observers for PSR-6 cache invalidation
+        \App\Models\Product::observe(\App\Observers\ProductObserver::class);
+        \App\Models\Category::observe(\App\Observers\CategoryObserver::class);
+        \App\Models\Order::observe(\App\Observers\OrderObserver::class);
+        \App\Models\Role::observe(\App\Observers\RoleObserver::class);
 
         // Superadmin bypass: users with admin role or legacy admin role pass all abilities
         Gate::before(function ($user, $ability) {

@@ -17,7 +17,7 @@ class UserSeeder extends Seeder
             [
                 'identification' => 10000001,
                 'name' => 'Admin',
-                'last_Name' => 'PlaceToPay',
+                'last_name' => 'PlaceToPay',
                 'email' => 'admin@placetopay.com',
                 'phone' => '3001234567',
                 'direction' => 'Calle 10 # 20-30',
@@ -30,7 +30,7 @@ class UserSeeder extends Seeder
             [
                 'identification' => 10000002,
                 'name' => 'Cliente',
-                'last_Name' => 'Prueba',
+                'last_name' => 'Prueba',
                 'email' => 'cliente@placetopay.com',
                 'phone' => '3007654321',
                 'direction' => 'Carrera 45 # 50-60',
@@ -43,7 +43,7 @@ class UserSeeder extends Seeder
             [
                 'identification' => 10000003,
                 'name' => 'Cliente Inactivo',
-                'last_Name' => 'Prueba',
+                'last_name' => 'Prueba',
                 'email' => 'inactivo@placetopay.com',
                 'phone' => '3001112233',
                 'direction' => 'Avenida 68 # 80-90',
@@ -56,10 +56,15 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($users as $userData) {
-            User::updateOrCreate(
+            $roleSlug = $userData['role'] ?? 'client';
+            unset($userData['role']);
+
+            $user = User::updateOrCreate(
                 ['identification' => $userData['identification']],
                 $userData
             );
+
+            $user->assignRole($roleSlug);
         }
     }
 }

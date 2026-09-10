@@ -47,10 +47,15 @@ Route::get('/payment/{order}/response', [PaymentController::class, 'processRespo
 
 // Guest routes (Authentication & Registration)
 Route::middleware('guest')->group(function () {
+    // Authentication Routes (Standard Laravel & Legacy compatibility)
+    Route::get('/login', [LoginController::class, 'index']);
+    Route::post('/login', [LoginController::class, 'login']);
     Route::get('/home/login', [LoginController::class, 'index'])->name('login');
     Route::post('/home/login', [LoginController::class, 'login'])->name('login.perform');
-    Route::post('/login', [LoginController::class, 'login']);
 
+    // Registration Routes (Standard Laravel & Legacy compatibility)
+    Route::get('/register', [RegisterUserController::class, 'create']);
+    Route::post('/register', [RegisterUserController::class, 'store']);
     Route::get('/home/register', [RegisterUserController::class, 'create'])->name('register');
     Route::post('/home/registered', [RegisterUserController::class, 'store'])->name('register.store');
 });
@@ -102,6 +107,7 @@ Route::middleware('auth')->group(function () {
             });
             Route::middleware('permission:products.import')->group(function () {
                 Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
+                Route::get('/products/imports/{import}/status', [ProductController::class, 'importStatus'])->name('products.imports.status');
             });
             Route::middleware('permission:products.create')->group(function () {
                 Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');

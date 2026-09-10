@@ -34,11 +34,11 @@ class UserFactory extends Factory
         return [
             'identification' => fake()->unique()->randomNumber(8, true),
             'name' => fake()->firstName(),
-            'last_Name' => fake()->lastName(),
+            'last_name' => fake()->lastName(),
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->phoneNumber(),
             'direction' => fake()->address(),
-            'user_Name' => fake()->userName(),
+            'user_name' => fake()->userName(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];

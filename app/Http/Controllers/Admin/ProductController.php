@@ -7,8 +7,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ImportProductRequest;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use App\Jobs\ImportProductsJob;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductImport;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -54,8 +57,9 @@ class ProductController extends Controller
 
         $products = $query->orderBy('name')->paginate(10)->withQueryString();
         $categories = Category::where('is_active', true)->orderBy('name')->get();
+        $latestImport = ProductImport::orderByDesc('id')->first();
 
-        return view('admin.products.index', compact('products', 'search', 'status', 'categories', 'categoryId'));
+        return view('admin.products.index', compact('products', 'search', 'status', 'categories', 'categoryId', 'latestImport'));
     }
 
     /**
@@ -73,16 +77,18 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request): RedirectResponse
     {
-        $validated = $request->validated();
+        $data = $request->validated();
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('products', 'public');
+            $data['image'] = $request->file('image')->store('products', 'public');
         }
 
-        $product = Product::create($validated);
+        $data['is_active'] = $request->boolean('is_active', true);
+
+        Product::create($data);
 
         return redirect()->route('admin.products.index')
-            ->with('success', "El producto \"{$product->name}\" ha sido creado correctamente.");
+            ->with('success', 'Producto creado exitosamente.');
     }
 
     /**
@@ -100,45 +106,45 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
-        $validated = $request->validated();
+        $data = $request->validated();
 
         if ($request->hasFile('image')) {
-            // Delete the old image if it exists
-            if ($product->image) {
+            // Delete old image if exists
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
             }
-            $validated['image'] = $request->file('image')->store('products', 'public');
+            $data['image'] = $request->file('image')->store('products', 'public');
         }
 
-        if ($request->has('is_active')) {
-            $validated['is_active'] = (bool) $request->input('is_active');
-        }
+        $data['is_active'] = $request->boolean('is_active', true);
 
-        $product->update($validated);
+        $product->update($data);
 
         return redirect()->route('admin.products.index')
-            ->with('success', "El producto \"{$product->name}\" ha sido actualizado correctamente.");
+            ->with('success', 'Producto actualizado exitosamente.');
     }
 
     /**
-     * Toggle product active status.
+     * Remove the specified product from storage.
      */
-    public function toggleStatus(Product $product): RedirectResponse
+    public function destroy(Product $product): RedirectResponse
     {
-        $product->is_active = ! $product->is_active;
-        $product->save();
+        if ($product->image && Storage::disk('public')->exists($product->image)) {
+            Storage::disk('public')->delete($product->image);
+        }
 
-        $statusText = $product->is_active ? 'habilitado' : 'inhabilitado';
+        $product->delete();
 
-        return redirect()->back()->with('success', "El producto \"{$product->name}\" ha sido {$statusText} correctamente.");
+        return redirect()->route('admin.products.index')
+            ->with('success', 'Producto eliminado exitosamente.');
     }
 
     /**
-     * Export products to spreadsheet (.xlsx or .csv).
+     * Export products to a spreadsheet (.xlsx or .csv).
      */
     public function export(Request $request): Response
     {
-        $format = $request->query('format', 'xlsx');
+        $format = strtolower($request->query('format', 'xlsx'));
         if (! in_array($format, ['xlsx', 'csv'], true)) {
             $format = 'xlsx';
         }
@@ -147,26 +153,70 @@ class ProductController extends Controller
     }
 
     /**
-     * Import products from uploaded spreadsheet.
+     * Import products from uploaded spreadsheet asynchronously via queue.
      */
     public function import(ImportProductRequest $request): RedirectResponse
     {
         $file = $request->file('file');
-        $result = $this->spreadsheetService->import($file);
 
-        if ($result->hasErrors()) {
-            if ($result->hasSuccess()) {
+        // Store file temporarily in local storage
+        $storedPath = $file->store('imports', 'local');
+
+        $productImport = ProductImport::create([
+            'user_identification' => $request->user()?->identification,
+            'file_name' => $file->getClientOriginalName(),
+            'file_path' => $storedPath,
+            'status' => ProductImport::STATUS_PENDING,
+        ]);
+
+        // Dispatch asynchronous import job to queue
+        ImportProductsJob::dispatch($productImport);
+
+        // Check if job completed immediately (sync queue driver used in testing)
+        $productImport->refresh();
+
+        if ($productImport->isCompleted() || $productImport->isFailed()) {
+            if ($productImport->hasErrors() || $productImport->isFailed()) {
+                if ($productImport->created_count > 0 || $productImport->updated_count > 0) {
+                    return redirect()->route('admin.products.index')
+                        ->with('warning', $productImport->getSummaryMessage())
+                        ->with('import_errors', $productImport->errors ?? []);
+                }
+
                 return redirect()->route('admin.products.index')
-                    ->with('warning', $result->getSummaryMessage())
-                    ->with('import_errors', $result->errors);
+                    ->with('error', $productImport->getSummaryMessage())
+                    ->with('import_errors', $productImport->errors ?? []);
             }
 
             return redirect()->route('admin.products.index')
-                ->with('error', $result->getSummaryMessage())
-                ->with('import_errors', $result->errors);
+                ->with('success', $productImport->getSummaryMessage());
         }
 
         return redirect()->route('admin.products.index')
-            ->with('success', $result->getSummaryMessage());
+            ->with('success', "El archivo '{$productImport->file_name}' ha sido encolado para su importación en segundo plano (ID #{$productImport->id}).");
+    }
+
+    /**
+     * Check status of a product import job via JSON for real-time polling.
+     */
+    public function importStatus(ProductImport $import): JsonResponse
+    {
+        return response()->json([
+            'id' => $import->id,
+            'file_name' => $import->file_name,
+            'status' => $import->status,
+            'is_completed' => $import->isCompleted(),
+            'is_processing' => $import->isProcessing(),
+            'is_failed' => $import->isFailed(),
+            'total_rows' => $import->total_rows,
+            'processed_rows' => $import->processed_rows,
+            'created_count' => $import->created_count,
+            'updated_count' => $import->updated_count,
+            'failed_count' => $import->failed_count,
+            'errors' => $import->errors ?? [],
+            'error_message' => $import->error_message,
+            'started_at' => $import->started_at?->toIso8601String(),
+            'completed_at' => $import->completed_at?->toIso8601String(),
+        ]);
     }
 }

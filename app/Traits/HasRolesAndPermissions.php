@@ -14,14 +14,7 @@ trait HasRolesAndPermissions
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Role::class,
-            'role_user',
-            'user_id',
-            'role_id',
-            'identification',
-            'id'
-        );
+        return $this->belongsToMany(Role::class);
     }
 
     /**
@@ -29,14 +22,7 @@ trait HasRolesAndPermissions
      */
     public function permissions(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Permission::class,
-            'permission_user',
-            'user_id',
-            'permission_id',
-            'identification',
-            'id'
-        );
+        return $this->belongsToMany(Permission::class);
     }
 
     /**
@@ -48,11 +34,6 @@ trait HasRolesAndPermissions
 
         foreach ($roleList as $role) {
             $slug = $role instanceof Role ? $role->slug : $role;
-
-            // Check legacy role column first for backward compatibility
-            if (isset($this->attributes['role']) && $this->attributes['role'] === $slug) {
-                return true;
-            }
 
             // Check relationship roles
             if ($this->roles->contains(function ($item) use ($slug) {
@@ -97,13 +78,73 @@ trait HasRolesAndPermissions
             return true;
         }
 
-        // Direct user permissions
-        if ($this->permissions->contains('slug', $permissionSlug)) {
-            return true;
+        $slugs = $this->getCachedPermissionSlugs();
+
+        return in_array($permissionSlug, $slugs, true);
+    }
+
+    /**
+     * Get cached consolidated permission slugs for the user via PSR-6.
+     *
+     * @return array<string>
+     */
+    public function getCachedPermissionSlugs(): array
+    {
+        $userId = $this->identification ?? $this->id;
+        if (! $userId) {
+            return [];
         }
 
-        // Permissions inherited through roles
-        return $this->roles->flatMap->permissions->contains('slug', $permissionSlug);
+        try {
+            /** @var \Psr\Cache\CacheItemPoolInterface $pool */
+            $pool = app(\Psr\Cache\CacheItemPoolInterface::class);
+            /** @var \App\Services\Cache\CacheVersionManager $versionManager */
+            $versionManager = app(\App\Services\Cache\CacheVersionManager::class);
+
+            $cacheKey = $versionManager->makeKey('roles', "user_perms_{$userId}");
+            $item = $pool->getItem($cacheKey);
+
+            if ($item->isHit()) {
+                return (array) $item->get();
+            }
+
+            $directSlugs = $this->permissions->pluck('slug')->all();
+            $roleSlugs = $this->roles->flatMap->permissions->pluck('slug')->all();
+            $slugs = array_values(array_unique(array_merge($directSlugs, $roleSlugs)));
+
+            $item->set($slugs);
+            $item->expiresAfter(3600); // 1 hour
+            $pool->save($item);
+
+            return $slugs;
+        } catch (\Throwable) {
+            $directSlugs = $this->permissions->pluck('slug')->all();
+            $roleSlugs = $this->roles->flatMap->permissions->pluck('slug')->all();
+            return array_values(array_unique(array_merge($directSlugs, $roleSlugs)));
+        }
+    }
+
+    /**
+     * Invalidate user's permission cache.
+     */
+    public function invalidatePermissionsCache(): void
+    {
+        $userId = $this->identification ?? $this->id;
+        if (! $userId) {
+            return;
+        }
+
+        try {
+            /** @var \Psr\Cache\CacheItemPoolInterface $pool */
+            $pool = app(\Psr\Cache\CacheItemPoolInterface::class);
+            /** @var \App\Services\Cache\CacheVersionManager $versionManager */
+            $versionManager = app(\App\Services\Cache\CacheVersionManager::class);
+
+            $cacheKey = $versionManager->makeKey('roles', "user_perms_{$userId}");
+            $pool->deleteItem($cacheKey);
+        } catch (\Throwable) {
+            // Ignore if cache unavailable
+        }
     }
 
     /**
@@ -167,19 +208,19 @@ trait HasRolesAndPermissions
     public function assignRole(string|Role $role): self
     {
         $roleModel = is_string($role)
-            ? Role::where('slug', $role)->orWhere('name', $role)->firstOrFail()
+            ? (Role::where('slug', $role)->orWhere('name', $role)->first()
+                ?? Role::create([
+                    'slug' => $role,
+                    'name' => ucfirst(str_replace('_', ' ', $role)),
+                    'is_system' => in_array($role, ['admin', 'client']),
+                ]))
             : $role;
 
         $this->roles()->syncWithoutDetaching([$roleModel->id]);
 
-        // Keep legacy role attribute in sync if not already set or if assigning admin
-        if ($roleModel->slug === 'admin' && isset($this->attributes['role'])) {
-            $this->attributes['role'] = 'admin';
-            $this->saveQuietly();
-        }
-
         // Reload relationship
         $this->unsetRelation('roles');
+        $this->invalidatePermissionsCache();
 
         return $this;
     }
@@ -198,6 +239,7 @@ trait HasRolesAndPermissions
         }
 
         $this->unsetRelation('roles');
+        $this->invalidatePermissionsCache();
 
         return $this;
     }
@@ -215,15 +257,19 @@ trait HasRolesAndPermissions
             } elseif (is_numeric($role)) {
                 $ids[] = (int) $role;
             } elseif (is_string($role)) {
-                $id = Role::where('slug', $role)->orWhere('name', $role)->value('id');
-                if ($id) {
-                    $ids[] = $id;
-                }
+                $roleModel = Role::where('slug', $role)->orWhere('name', $role)->first()
+                    ?? Role::create([
+                        'slug' => $role,
+                        'name' => ucfirst(str_replace('_', ' ', $role)),
+                        'is_system' => in_array($role, ['admin', 'client']),
+                    ]);
+                $ids[] = $roleModel->id;
             }
         }
 
         $this->roles()->sync($ids);
         $this->unsetRelation('roles');
+        $this->invalidatePermissionsCache();
 
         return $this;
     }
@@ -239,6 +285,7 @@ trait HasRolesAndPermissions
 
         $this->permissions()->syncWithoutDetaching([$permissionModel->id]);
         $this->unsetRelation('permissions');
+        $this->invalidatePermissionsCache();
 
         return $this;
     }
@@ -257,6 +304,7 @@ trait HasRolesAndPermissions
         }
 
         $this->unsetRelation('permissions');
+        $this->invalidatePermissionsCache();
 
         return $this;
     }
@@ -283,6 +331,7 @@ trait HasRolesAndPermissions
 
         $this->permissions()->sync($ids);
         $this->unsetRelation('permissions');
+        $this->invalidatePermissionsCache();
 
         return $this;
     }

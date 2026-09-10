@@ -2,6 +2,7 @@
 
 namespace App\Contracts;
 
+use App\Models\ProductImport;
 use App\Services\Product\ProductImportResult;
 use Illuminate\Http\UploadedFile;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,10 +18,11 @@ interface ProductSpreadsheetServiceInterface
     public function export(string $format = 'xlsx'): Response;
 
     /**
-     * Import products from an uploaded spreadsheet file (.xlsx or .csv).
+     * Import products from an uploaded spreadsheet file or stored file path (.xlsx or .csv).
      *
-     * @param UploadedFile $file
+     * @param UploadedFile|string $file
+     * @param ProductImport|null $import
      * @return ProductImportResult
      */
-    public function import(UploadedFile $file): ProductImportResult;
+    public function import(UploadedFile|string $file, ?ProductImport $import = null): ProductImportResult;
 }

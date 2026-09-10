@@ -20,13 +20,15 @@ class ClientController extends Controller
         $search = $request->query('search');
         $status = $request->query('status');
 
-        $query = User::query()->where('role', 'client');
+        $query = User::query()->whereDoesntHave('roles', function ($q) {
+            $q->where('slug', 'admin');
+        });
 
         if (! empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('identification', 'like', "%{$search}%")
                   ->orWhere('name', 'like', "%{$search}%")
-                  ->orWhere('last_Name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
             });
         }
@@ -47,7 +49,7 @@ class ClientController extends Controller
      */
     public function edit(User $client): View
     {
-        abort_if($client->role !== 'client', 404);
+        abort_if($client->isAdmin(), 404);
 
         $client->load('roles');
         $roles = Role::orderBy('name')->get();
@@ -61,13 +63,13 @@ class ClientController extends Controller
      */
     public function update(UpdateClientRequest $request, User $client): RedirectResponse
     {
-        abort_if($client->role !== 'client', 404);
+        abort_if($client->isAdmin(), 404);
 
         $validated = $request->validated();
 
         $client->update([
             'name' => $validated['name'],
-            'last_Name' => $validated['last_Name'],
+            'last_name' => $validated['last_name'] ?? $validated['last_Name'] ?? $client->last_name,
             'email' => $validated['email'],
             'phone' => $validated['phone'],
             'direction' => $validated['direction'],
@@ -79,7 +81,7 @@ class ClientController extends Controller
         }
 
         return redirect()->route('admin.clients.index')
-            ->with('success', "El cliente {$client->name} {$client->last_Name} ha sido actualizado correctamente.");
+            ->with('success', "El cliente {$client->name} {$client->last_name} ha sido actualizado correctamente.");
     }
 
     /**

@@ -21,11 +21,23 @@ class LoginControllerTest extends TestCase
         $response = $this->get('/home/login');
 
         $response->assertStatus(200);
+        $response->assertViewIs('auth.login');
         $response->assertSee('Login', false);
         $response->assertSee('name="email"', false);
         $response->assertSee('name="password"', false);
         $response->assertSee('name="remember"', false);
         $response->assertSee('method="POST"', false);
+    }
+
+    /**
+     * Test the standard /login route renders the auth.login view.
+     */
+    public function test_standard_login_route_can_be_rendered(): void
+    {
+        $response = $this->get('/login');
+
+        $response->assertStatus(200);
+        $response->assertViewIs('auth.login');
     }
 
     /**

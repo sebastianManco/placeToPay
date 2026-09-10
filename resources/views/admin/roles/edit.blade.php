@@ -14,12 +14,13 @@
 
     @if ($errors->any())
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <h6 class="alert-heading font-weight-bold mb-1">{{ __('Por favor corrige los errores:') }}</h6>
-            <ul class="mb-0 pl-3">
+            <h6 class="alert-heading fw-bold mb-1">{{ __('Por favor corrige los errores:') }}</h6>
+            <ul class="mb-0 ps-3">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
@@ -29,16 +30,16 @@
 
         {{-- Datos básicos del rol --}}
         <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white font-weight-bold">
+            <div class="card-header bg-white fw-bold">
                 {{ __('Información del Rol') }}
                 @if ($role->isSystem() || in_array($role->slug, ['admin', 'client']))
-                    <span class="badge badge-warning ml-2">{{ __('Rol Protegido del Sistema') }}</span>
+                    <span class="badge bg-warning text-dark ms-2">{{ __('Rol Protegido del Sistema') }}</span>
                 @endif
             </div>
             <div class="card-body p-4">
                 <div class="row g-3">
                     <div class="col-md-6 mb-3">
-                        <label for="name" class="form-label font-weight-bold">{{ __('Nombre del Rol') }} <span class="text-danger">*</span></label>
+                        <label for="name" class="form-label fw-bold">{{ __('Nombre del Rol') }} <span class="text-danger">*</span></label>
                         <input type="text"
                                id="name"
                                name="name"
@@ -52,7 +53,7 @@
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label for="slug" class="form-label font-weight-bold">
+                        <label for="slug" class="form-label fw-bold">
                             {{ __('Identificador (Slug)') }}
                             @if ($role->isSystem() || in_array($role->slug, ['admin', 'client']))
                                 <small class="text-muted">({{ __('No modificable para roles de sistema') }})</small>
@@ -73,7 +74,7 @@
                     </div>
 
                     <div class="col-12">
-                        <label for="description" class="form-label font-weight-bold">{{ __('Descripción') }}</label>
+                        <label for="description" class="form-label fw-bold">{{ __('Descripción') }}</label>
                         <textarea id="description"
                                   name="description"
                                   rows="2"
@@ -90,7 +91,7 @@
         {{-- Matriz de Permisos Granulares agrupados por módulo --}}
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <span class="font-weight-bold">{{ __('Permisos Granulares del Sistema') }}</span>
+                <span class="fw-bold">{{ __('Permisos Granulares del Sistema') }}</span>
                 <button type="button" class="btn btn-sm btn-outline-primary" id="btn-toggle-all">
                     {{ __('Seleccionar / Deseleccionar Todo') }}
                 </button>
@@ -121,15 +122,15 @@
                                 </div>
                                 <div class="card-body p-3 bg-white">
                                     @foreach ($permissions as $perm)
-                                        <div class="custom-control custom-checkbox mb-2">
+                                        <div class="form-check mb-2">
                                             <input type="checkbox"
-                                                   class="custom-control-input perm-checkbox perm-module-{{ $moduleKey }}"
+                                                   class="form-check-input perm-checkbox perm-module-{{ $moduleKey }}"
                                                    id="perm_{{ $perm->id }}"
                                                    name="permissions[]"
                                                    value="{{ $perm->id }}"
                                                    {{ in_array($perm->id, old('permissions', $rolePermissions)) ? 'checked' : '' }}>
-                                            <label class="custom-control-label" for="perm_{{ $perm->id }}">
-                                                <span class="font-weight-bold text-dark">{{ $perm->name }}</span>
+                                            <label class="form-check-label" for="perm_{{ $perm->id }}">
+                                                <span class="fw-bold text-dark">{{ $perm->name }}</span>
                                                 <br>
                                                 <span class="text-muted small font-monospace">{{ $perm->slug }}</span>
                                                 @if ($perm->description)
@@ -147,7 +148,7 @@
         </div>
 
         <div class="d-flex justify-content-end gap-2 mb-5">
-            <a href="{{ route('admin.roles.index') }}" class="btn btn-outline-secondary mr-2">
+            <a href="{{ route('admin.roles.index') }}" class="btn btn-outline-secondary me-2">
                 {{ __('Cancelar') }}
             </a>
             <button type="submit" class="btn btn-primary px-4">

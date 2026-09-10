@@ -16,8 +16,19 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Rap2hpoutre\FastExcel\FastExcel;
 
+use App\Services\Cache\CacheVersionManager;
+use Psr\Cache\CacheItemPoolInterface;
+
 class ReportService implements ReportServiceInterface
 {
+    public function __construct(
+        protected ?CacheItemPoolInterface $cachePool = null,
+        protected ?CacheVersionManager $versionManager = null
+    ) {
+        $this->cachePool = $cachePool ?? app(CacheItemPoolInterface::class);
+        $this->versionManager = $versionManager ?? app(CacheVersionManager::class);
+    }
+
     /**
      * Compute sales overview metrics (total revenue, count, average ticket, daily breakdown).
      *
@@ -26,6 +37,16 @@ class ReportService implements ReportServiceInterface
      */
     public function getSalesReport(array $filters = []): array
     {
+        $cacheKey = $this->versionManager->makeKey(
+            CacheVersionManager::TAG_REPORTS,
+            'sales_' . md5(json_encode($filters))
+        );
+        $item = $this->cachePool->getItem($cacheKey);
+
+        if ($item->isHit()) {
+            return $item->get();
+        }
+
         $baseQuery = Order::query();
         $this->applyDateFilters($baseQuery, $filters);
 
@@ -58,7 +79,7 @@ class ReportService implements ReportServiceInterface
             })
             ->all();
 
-        return [
+        $result = [
             'total_sales' => $totalSales,
             'approved_orders_count' => $approvedOrdersCount,
             'total_orders_count' => $totalOrdersCount,
@@ -66,6 +87,12 @@ class ReportService implements ReportServiceInterface
             'conversion_rate' => $conversionRate,
             'daily_sales' => $dailySales,
         ];
+
+        $item->set($result);
+        $item->expiresAfter(300); // 5 minutes
+        $this->cachePool->save($item);
+
+        return $result;
     }
 
     /**
@@ -95,6 +122,16 @@ class ReportService implements ReportServiceInterface
      */
     public function getTopSellingProducts(array $filters = [], int $limit = 10): Collection
     {
+        $cacheKey = $this->versionManager->makeKey(
+            CacheVersionManager::TAG_REPORTS,
+            'top_products_' . $limit . '_' . md5(json_encode($filters))
+        );
+        $item = $this->cachePool->getItem($cacheKey);
+
+        if ($item->isHit()) {
+            return $item->get();
+        }
+
         $query = OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.status', Order::STATUS_APPROVED);
@@ -118,11 +155,17 @@ class ReportService implements ReportServiceInterface
             ->limit($limit)
             ->get();
 
-        return $results->map(function ($item) {
+        $mapped = $results->map(function ($item) {
             $item->total_quantity = (int) $item->total_quantity;
             $item->total_revenue = (float) $item->total_revenue;
             return $item;
         });
+
+        $item->set($mapped);
+        $item->expiresAfter(300); // 5 minutes
+        $this->cachePool->save($item);
+
+        return $mapped;
     }
 
     /**
@@ -133,6 +176,16 @@ class ReportService implements ReportServiceInterface
      */
     public function getPaymentStatusesReport(array $filters = []): array
     {
+        $cacheKey = $this->versionManager->makeKey(
+            CacheVersionManager::TAG_REPORTS,
+            'payments_' . md5(json_encode($filters))
+        );
+        $item = $this->cachePool->getItem($cacheKey);
+
+        if ($item->isHit()) {
+            return $item->get();
+        }
+
         $query = Order::query();
         $this->applyDateFilters($query, $filters);
 
@@ -164,11 +217,17 @@ class ReportService implements ReportServiceInterface
             }
         }
 
-        return [
+        $result = [
             'total_transactions' => $totalTransactions,
             'total_amount' => $totalAmount,
             'statuses' => $statuses,
         ];
+
+        $item->set($result);
+        $item->expiresAfter(300); // 5 minutes
+        $this->cachePool->save($item);
+
+        return $result;
     }
 
     /**
@@ -180,6 +239,16 @@ class ReportService implements ReportServiceInterface
      */
     public function getInventoryAlerts(int $lowStockThreshold = 5, int $daysInactive = 30): array
     {
+        $cacheKey = $this->versionManager->makeKey(
+            CacheVersionManager::TAG_REPORTS,
+            "inventory_alerts_{$lowStockThreshold}_{$daysInactive}"
+        );
+        $item = $this->cachePool->getItem($cacheKey);
+
+        if ($item->isHit()) {
+            return $item->get();
+        }
+
         // Out of stock
         $outOfStock = Product::with('category')
             ->where('stock', 0)
@@ -212,7 +281,7 @@ class ReportService implements ReportServiceInterface
             ->orderByDesc('stock')
             ->get();
 
-        return [
+        $result = [
             'threshold' => $lowStockThreshold,
             'days_inactive' => $daysInactive,
             'out_of_stock' => $outOfStock,
@@ -222,6 +291,12 @@ class ReportService implements ReportServiceInterface
             'dead_stock' => $deadStock,
             'dead_stock_count' => $deadStock->count(),
         ];
+
+        $item->set($result);
+        $item->expiresAfter(300); // 5 minutes
+        $this->cachePool->save($item);
+
+        return $result;
     }
 
     /**
@@ -268,7 +343,7 @@ class ReportService implements ReportServiceInterface
 
         $pdf = Pdf::loadView('admin.reports.pdf', $data)
             ->setPaper('a4', 'portrait')
-            ->setOption(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true]);
+            ->setOption(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => false]);
 
         Storage::disk('local')->put($storagePath, $pdf->output());
 

@@ -9,7 +9,7 @@
             <a href="{{ route('admin.products.export') }}" class="btn btn-outline-success" title="Descargar productos en Excel">
                 {{ __('Exportar Excel') }}
             </a>
-            <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#importModal" title="Importar productos desde Excel">
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importModal" title="Importar productos desde Excel">
                 {{ __('Importar Excel') }}
             </button>
             <a href="{{ route('admin.products.create') }}" class="btn btn-success">
@@ -18,30 +18,35 @@
         </div>
     </div>
 
+    @if (isset($latestImport) && ($latestImport->isPending() || $latestImport->isProcessing()))
+        <div class="alert alert-info alert-dismissible fade show d-flex align-items-center justify-content-between" role="alert">
+            <div>
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <strong>{{ __('Importación en segundo plano') }} (ID #{{ $latestImport->id }}):</strong>
+                <span>{{ $latestImport->file_name }} &bull; {{ __('Estado:') }} <span class="badge bg-primary">{{ ucfirst($latestImport->status) }}</span> &bull; {{ __('Filas procesadas:') }} {{ $latestImport->processed_rows }}/{{ $latestImport->total_rows }}</span>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
-            <button type="button" class="close" data-dismiss="alert" data-bs-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
     @if (session('warning'))
         <div class="alert alert-warning alert-dismissible fade show" role="alert">
             {{ session('warning') }}
-            <button type="button" class="close" data-dismiss="alert" data-bs-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
     @if (session('error'))
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             {{ session('error') }}
-            <button type="button" class="close" data-dismiss="alert" data-bs-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
@@ -60,18 +65,14 @@
                     @endforeach
                 </ul>
             </div>
-            <button type="button" class="close" data-dismiss="alert" data-bs-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
     @if ($errors->has('file'))
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             {{ $errors->first('file') }}
-            <button type="button" class="close" data-dismiss="alert" data-bs-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
@@ -201,28 +202,26 @@
                     @csrf
                     <div class="modal-header">
                         <h5 class="modal-title" id="importModalLabel">{{ __('Importación Masiva de Productos') }}</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <p class="text-muted small mb-2">
                             Suba un archivo en formato <strong>.xlsx</strong> o <strong>.csv</strong> para registrar o actualizar productos de manera masiva.
                         </p>
                         <div class="alert alert-info py-2 small">
-                            <ul class="mb-0 pl-3">
+                            <ul class="mb-0 ps-3">
                                 <li><strong>Actualización:</strong> Si la fila contiene la columna <code>id</code> con un producto existente, sus datos serán actualizados.</li>
                                 <li><strong>Creación:</strong> Si la columna <code>id</code> está vacía o no se incluye, se registrará un producto nuevo.</li>
                                 <li><strong>Columnas esperadas:</strong> <code>id</code>, <code>name</code>, <code>category</code>, <code>price</code>, <code>stock</code>, <code>is_active</code>, <code>description</code>.</li>
                             </ul>
                         </div>
-                        <div class="form-group mb-3">
-                            <label for="file" class="font-weight-bold">{{ __('Seleccionar archivo Excel / CSV') }}:</label>
-                            <input class="form-control-file" type="file" id="file" name="file" accept=".xlsx,.csv,.txt" required>
+                        <div class="mb-3">
+                            <label for="file" class="fw-bold form-label">{{ __('Seleccionar archivo Excel / CSV') }}:</label>
+                            <input class="form-control" type="file" id="file" name="file" accept=".xlsx,.csv,.txt" required>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __('Cancelar') }}</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancelar') }}</button>
                         <button type="submit" class="btn btn-primary">
                             {{ __('Importar Productos') }}
                         </button>

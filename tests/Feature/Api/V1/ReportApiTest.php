@@ -4,14 +4,13 @@ namespace Tests\Feature\Api\V1;
 
 use App\Jobs\GenerateReportJob;
 use App\Models\Category;
-use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Report;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class ReportApiTest extends TestCase
@@ -39,10 +38,60 @@ class ReportApiTest extends TestCase
     }
 
     /**
+     * Helper to create a regular client user without report permissions.
+     */
+    protected function createClient(): User
+    {
+        return User::create([
+            'identification' => 88000002,
+            'name' => 'Report Client',
+            'last_Name' => 'Tester',
+            'email' => 'client@reports.test',
+            'phone' => '3009990000',
+            'direction' => 'Side Ave',
+            'user_name' => 'reportclient',
+            'password' => 'secret123',
+            'email_verified_at' => now(),
+            'is_active' => true,
+            'role' => 'client',
+        ]);
+    }
+
+    /**
+     * Test unauthenticated access to reports returns 401 Unauthorized.
+     */
+    public function test_unauthenticated_access_to_reports_returns_401(): void
+    {
+        $responseIndex = $this->getJson(route('api.v1.reports.index'));
+        $responseIndex->assertUnauthorized();
+
+        $responseMetrics = $this->getJson(route('api.v1.reports.metrics.sales'));
+        $responseMetrics->assertUnauthorized();
+    }
+
+    /**
+     * Test user without permissions cannot access reports (403 Forbidden).
+     */
+    public function test_client_without_permission_cannot_access_reports(): void
+    {
+        $client = $this->createClient();
+        Sanctum::actingAs($client, ['*']);
+
+        $responseIndex = $this->getJson(route('api.v1.reports.index'));
+        $responseIndex->assertForbidden();
+
+        $responseMetrics = $this->getJson(route('api.v1.reports.metrics.sales'));
+        $responseMetrics->assertForbidden();
+    }
+
+    /**
      * Test listing reports with pagination.
      */
     public function test_can_list_reports_with_pagination(): void
     {
+        $admin = $this->createAdmin();
+        Sanctum::actingAs($admin, ['*']);
+
         Report::create([
             'title' => 'Reporte de Ventas Q1',
             'type' => Report::TYPE_SALES,
@@ -87,6 +136,9 @@ class ReportApiTest extends TestCase
      */
     public function test_can_filter_reports_by_type_and_status(): void
     {
+        $admin = $this->createAdmin();
+        Sanctum::actingAs($admin, ['*']);
+
         Report::create([
             'title' => 'Reporte Ventas',
             'type' => Report::TYPE_SALES,
@@ -118,6 +170,7 @@ class ReportApiTest extends TestCase
         Queue::fake();
 
         $admin = $this->createAdmin();
+        Sanctum::actingAs($admin, ['*']);
 
         $payload = [
             'title' => 'Reporte Completo Semestral',
@@ -129,8 +182,7 @@ class ReportApiTest extends TestCase
             'days_inactive' => 45,
         ];
 
-        $response = $this->actingAs($admin)
-            ->postJson(route('api.v1.reports.store'), $payload);
+        $response = $this->postJson(route('api.v1.reports.store'), $payload);
 
         $response->assertStatus(202)
             ->assertJson([
@@ -157,6 +209,9 @@ class ReportApiTest extends TestCase
      */
     public function test_cannot_enqueue_report_with_invalid_parameters(): void
     {
+        $admin = $this->createAdmin();
+        Sanctum::actingAs($admin, ['*']);
+
         $response = $this->postJson(route('api.v1.reports.store'), [
             'title' => '',
             'type' => 'invalid_type',
@@ -177,6 +232,9 @@ class ReportApiTest extends TestCase
      */
     public function test_can_show_report(): void
     {
+        $admin = $this->createAdmin();
+        Sanctum::actingAs($admin, ['*']);
+
         $report = Report::create([
             'title' => 'Auditoría de Pagos',
             'type' => Report::TYPE_PAYMENTS,
@@ -207,6 +265,9 @@ class ReportApiTest extends TestCase
      */
     public function test_can_delete_report(): void
     {
+        $admin = $this->createAdmin();
+        Sanctum::actingAs($admin, ['*']);
+
         $report = Report::create([
             'title' => 'Reporte para borrar',
             'type' => Report::TYPE_ORDERS,
@@ -225,6 +286,9 @@ class ReportApiTest extends TestCase
      */
     public function test_download_returns_404_when_file_not_ready(): void
     {
+        $admin = $this->createAdmin();
+        Sanctum::actingAs($admin, ['*']);
+
         $report = Report::create([
             'title' => 'Reporte Sin Archivo',
             'type' => Report::TYPE_SALES,
@@ -246,6 +310,9 @@ class ReportApiTest extends TestCase
      */
     public function test_can_download_generated_report_file(): void
     {
+        $admin = $this->createAdmin();
+        Sanctum::actingAs($admin, ['*']);
+
         Storage::fake('local');
 
         $fakeFilePath = 'reports/test_report.pdf';
@@ -269,6 +336,9 @@ class ReportApiTest extends TestCase
      */
     public function test_can_get_live_sales_metrics(): void
     {
+        $admin = $this->createAdmin();
+        Sanctum::actingAs($admin, ['*']);
+
         $response = $this->getJson(route('api.v1.reports.metrics.sales'));
 
         $response->assertOk()
@@ -291,6 +361,9 @@ class ReportApiTest extends TestCase
      */
     public function test_can_get_live_payment_metrics(): void
     {
+        $admin = $this->createAdmin();
+        Sanctum::actingAs($admin, ['*']);
+
         $response = $this->getJson(route('api.v1.reports.metrics.payments'));
 
         $response->assertOk()
@@ -310,6 +383,9 @@ class ReportApiTest extends TestCase
      */
     public function test_can_get_live_top_products_metrics(): void
     {
+        $admin = $this->createAdmin();
+        Sanctum::actingAs($admin, ['*']);
+
         $response = $this->getJson(route('api.v1.reports.metrics.top-products'));
 
         $response->assertOk()
@@ -325,6 +401,9 @@ class ReportApiTest extends TestCase
      */
     public function test_can_get_live_inventory_alerts_metrics(): void
     {
+        $admin = $this->createAdmin();
+        Sanctum::actingAs($admin, ['*']);
+
         $category = Category::factory()->create();
         Product::factory()->create(['category_id' => $category->id, 'stock' => 0]);
         Product::factory()->create(['category_id' => $category->id, 'stock' => 2]);
