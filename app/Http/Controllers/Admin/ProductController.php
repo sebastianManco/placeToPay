@@ -140,6 +140,19 @@ class ProductController extends Controller
     }
 
     /**
+     * Toggle product active status.
+     */
+    public function toggleStatus(Product $product): RedirectResponse
+    {
+        $product->is_active = ! $product->is_active;
+        $product->save();
+
+        $statusText = $product->is_active ? 'habilitado' : 'inhabilitado';
+
+        return redirect()->back()->with('success', "El producto \"{$product->name}\" ha sido {$statusText} correctamente.");
+    }
+
+    /**
      * Export products to a spreadsheet (.xlsx or .csv).
      */
     public function export(Request $request): Response
