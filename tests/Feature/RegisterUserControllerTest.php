@@ -19,8 +19,20 @@ class RegisterUserControllerTest extends TestCase
         $response = $this->get('/home/register');
 
         $response->assertStatus(200);
+        $response->assertViewIs('auth.register');
         $response->assertSee('name="password_confirmation"', false);
         $response->assertDontSee('value="{{old(\'password\')}}"', false);
+    }
+
+    /**
+     * Test standard /register route can be rendered.
+     */
+    public function test_standard_register_route_can_be_rendered(): void
+    {
+        $response = $this->get('/register');
+
+        $response->assertStatus(200);
+        $response->assertViewIs('auth.register');
     }
 
     /**
