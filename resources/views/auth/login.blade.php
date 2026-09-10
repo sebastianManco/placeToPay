@@ -36,7 +36,7 @@
                             @csrf
 
                             <!-- Email -->
-                            <div class="form-group mb-3">
+                            <div class="mb-3">
                                 <label for="email" class="form-label">{{ __('Email address') }}</label>
                                 <input id="email"
                                        type="email"
@@ -56,7 +56,7 @@
                             </div>
 
                             <!-- Contraseña -->
-                            <div class="form-group mb-3">
+                            <div class="mb-3">
                                 <label for="password" class="form-label">{{ __('Password') }}</label>
                                 <input id="password"
                                        type="password"
@@ -74,7 +74,7 @@
                             </div>
 
                             <!-- Recordar sesión -->
-                            <div class="form-group form-check mb-3">
+                            <div class="form-check mb-3">
                                 <input class="form-check-input"
                                        type="checkbox"
                                        name="remember"
