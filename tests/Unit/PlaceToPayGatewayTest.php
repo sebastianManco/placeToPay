@@ -184,4 +184,49 @@ class PlaceToPayGatewayTest extends TestCase
                 isset($request->data()['auth']['login']);
         });
     }
+
+    public function test_reverse_payment_sends_proper_payload_to_reverse_endpoint(): void
+    {
+        Http::fake([
+            'checkout-test.placetopay.com/api/reverse' => Http::response([
+                'status' => [
+                    'status' => 'APPROVED',
+                    'reason' => '00',
+                    'message' => 'Reversión aprobada',
+                    'date' => '2026-09-08T16:00:00-05:00',
+                ],
+                'payment' => [
+                    'status' => ['status' => 'APPROVED'],
+                ],
+            ], 200),
+        ]);
+
+        $gateway = new PlaceToPayGateway($this->config);
+        $order = new Order([
+            'reference' => 'ORD-REVERSE123',
+            'request_id' => '12345',
+        ]);
+
+        $result = $gateway->reversePayment($order, ['internalReference' => 999888]);
+
+        $this->assertEquals('APPROVED', $result['status']['status']);
+
+        Http::assertSent(function ($request) {
+            return $request->url() === 'https://checkout-test.placetopay.com/api/reverse' &&
+                $request['internalReference'] === 999888 &&
+                isset($request['auth']['tranKey']);
+        });
+    }
+
+    public function test_reverse_payment_returns_failed_when_no_internal_reference(): void
+    {
+        $gateway = new PlaceToPayGateway($this->config);
+        $order = new Order([
+            'reference' => 'ORD-NOREF',
+        ]);
+
+        $result = $gateway->reversePayment($order);
+
+        $this->assertEquals('FAILED', $result['status']['status']);
+    }
 }

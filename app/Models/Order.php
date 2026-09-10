@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Contracts\PaymentGatewayInterface;
+use App\Notifications\PaymentApprovedStockShortageNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
@@ -47,6 +50,8 @@ class Order extends Model
     public const STATUS_APPROVED = 'approved';
     public const STATUS_REJECTED = 'rejected';
     public const STATUS_CANCELLED = 'cancelled';
+    public const STATUS_REFUND_PENDING = 'refund_pending';
+    public const STATUS_REVERSED = 'reversed';
 
     /**
      * The attributes that are mass assignable.
@@ -60,6 +65,8 @@ class Order extends Model
         'request_id',
         'process_url',
         'status',
+        'stock_reserved',
+        'stock_reserved_at',
         'total_amount',
         'currency',
         'customer_name',
@@ -78,6 +85,8 @@ class Order extends Model
         return [
             'total_amount' => 'decimal:2',
             'user_identification' => 'integer',
+            'stock_reserved' => 'boolean',
+            'stock_reserved_at' => 'datetime',
         ];
     }
 
@@ -163,6 +172,26 @@ class Order extends Model
     }
 
     /**
+     * Check if the order is currently in refund pending status.
+     *
+     * @return bool
+     */
+    public function isRefundPending(): bool
+    {
+        return $this->status === self::STATUS_REFUND_PENDING;
+    }
+
+    /**
+     * Check if the order was reversed.
+     *
+     * @return bool
+     */
+    public function isReversed(): bool
+    {
+        return $this->status === self::STATUS_REVERSED;
+    }
+
+    /**
      * Determine whether the order can initiate or retry a payment.
      *
      * @return bool
@@ -193,38 +222,149 @@ class Order extends Model
             self::STATUS_REJECTED,
             self::STATUS_PENDING_PAYMENT,
             self::STATUS_CANCELLED,
+            self::STATUS_REFUND_PENDING,
+            self::STATUS_REVERSED,
         ], true);
     }
 
     /**
      * Determine whether the order allows a payment retry.
      * Only non-satisfactory orders eligible for payment can be retried.
+     * Orders with captured payment (refund_pending or reversed) cannot be retried.
      *
      * @return bool
      */
     public function canRetryPayment(): bool
     {
-        return $this->canBePaid() && ! $this->isApproved();
+        return $this->canBePaid() && ! $this->isApproved() && ! $this->isRefundPending() && ! $this->isReversed();
     }
 
     /**
-     * Transition order to approved status and deduct inventory stock with pessimistic locking.
-     * Prevents race conditions and overselling using lockForUpdate().
-     * If stock is insufficient, rolls back all changes and transitions order to rejected status.
+     * Reserve inventory stock for the order items with pessimistic locking.
+     * Prevents race conditions and overselling while payment is being processed.
+     *
+     * @return void
+     *
+     * @throws \RuntimeException
+     */
+    public function reserveStock(): void
+    {
+        if ($this->stock_reserved) {
+            return;
+        }
+
+        DB::transaction(function () {
+            $items = $this->items()->get();
+            $quantitiesByProduct = [];
+
+            foreach ($items as $item) {
+                if ($item->product_id) {
+                    $quantitiesByProduct[$item->product_id] = ($quantitiesByProduct[$item->product_id] ?? 0) + $item->quantity;
+                }
+            }
+
+            ksort($quantitiesByProduct);
+
+            $lockedProducts = [];
+            foreach ($quantitiesByProduct as $productId => $requiredQuantity) {
+                /** @var Product|null $product */
+                $product = Product::where('id', $productId)->lockForUpdate()->first();
+
+                if (! $product || $product->stock < $requiredQuantity) {
+                    $productName = $product ? $product->name : "ID {$productId}";
+                    $available = $product ? $product->stock : 0;
+                    throw new RuntimeException("Stock insuficiente para el producto '{$productName}'. Requerido: {$requiredQuantity}, Disponible: {$available}.");
+                }
+
+                $lockedProducts[] = [
+                    'model' => $product,
+                    'quantity' => $requiredQuantity,
+                ];
+            }
+
+            foreach ($lockedProducts as $entry) {
+                $entry['model']->decrement('stock', $entry['quantity']);
+            }
+
+            $this->update([
+                'stock_reserved' => true,
+                'stock_reserved_at' => now(),
+            ]);
+        });
+    }
+
+    /**
+     * Release previously reserved stock back to inventory.
+     *
+     * @return void
+     */
+    public function releaseReservedStock(): void
+    {
+        if (! $this->stock_reserved) {
+            return;
+        }
+
+        DB::transaction(function () {
+            $items = $this->items()->get();
+            $quantitiesByProduct = [];
+
+            foreach ($items as $item) {
+                if ($item->product_id) {
+                    $quantitiesByProduct[$item->product_id] = ($quantitiesByProduct[$item->product_id] ?? 0) + $item->quantity;
+                }
+            }
+
+            ksort($quantitiesByProduct);
+
+            foreach ($quantitiesByProduct as $productId => $quantity) {
+                $product = Product::where('id', $productId)->lockForUpdate()->first();
+                if ($product) {
+                    $product->increment('stock', $quantity);
+                }
+            }
+
+            $this->update([
+                'stock_reserved' => false,
+                'stock_reserved_at' => null,
+            ]);
+        });
+    }
+
+    /**
+     * Transition order to approved status and finalize inventory stock.
+     * If stock was already reserved, secures approval and clears reservation flag.
+     * If stock was not reserved, attempts deduction under pessimistic lock.
+     * If stock deduction fails despite payment being captured by gateway, NEVER marks
+     * as rejected: attempts automated reversal, transitions to refund_pending or reversed,
+     * and alerts support immediately.
      *
      * @param  bool  $throwOnError
-     * @return bool Returns true if approved, false if rejected due to insufficient stock or error.
+     * @param  array<string, mixed>|null  $gatewayPaymentData
+     * @return bool Returns true if approved, false if contingency occurred.
      *
      * @throws \Throwable
      */
-    public function markAsApproved(bool $throwOnError = false): bool
+    public function markAsApproved(bool $throwOnError = false, ?array $gatewayPaymentData = null): bool
     {
         if ($this->status === self::STATUS_APPROVED) {
             return true;
         }
 
+        // If stock is already reserved, it was already deducted when entering payment.
+        if ($this->stock_reserved) {
+            $this->update([
+                'status' => self::STATUS_APPROVED,
+                'stock_reserved' => false,
+                'stock_reserved_at' => null,
+            ]);
+
+            return true;
+        }
+
+        // Fallback: stock was not pre-reserved, attempt pessimistic lock deduction
+        $shortageDetails = [];
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use (&$shortageDetails) {
                 $items = $this->items()->get();
                 $quantitiesByProduct = [];
 
@@ -234,7 +374,6 @@ class Order extends Model
                     }
                 }
 
-                // Deterministic sort order by product ID to prevent deadlock between concurrent transactions
                 ksort($quantitiesByProduct);
 
                 $lockedProducts = [];
@@ -245,6 +384,12 @@ class Order extends Model
                     if (! $product || $product->stock < $requiredQuantity) {
                         $productName = $product ? $product->name : "ID {$productId}";
                         $available = $product ? $product->stock : 0;
+                        $shortageDetails[] = [
+                            'product_id' => $productId,
+                            'name' => $productName,
+                            'required' => $requiredQuantity,
+                            'available' => $available,
+                        ];
                         throw new RuntimeException("Stock insuficiente para el producto '{$productName}'. Requerido: {$requiredQuantity}, Disponible: {$available}.");
                     }
 
@@ -263,25 +408,112 @@ class Order extends Model
 
             return true;
         } catch (Throwable $e) {
-            $this->markAsRejected();
-            Log::warning("Orden #{$this->reference} rechazada al procesar aprobación por falta de existencias: " . $e->getMessage());
-
-            if ($throwOnError) {
-                throw $e;
-            }
-
-            return false;
+            return $this->handleStockShortageOnApprovedPayment($shortageDetails, $gatewayPaymentData, $e, $throwOnError);
         }
     }
 
     /**
-     * Transition order to rejected status.
+     * Handle critical contingency where PlaceToPay approved the payment but inventory is exhausted.
+     * Attempts automated reversal, records critical incident, notifies support, and transitions order.
+     *
+     * @param  array<int, array<string, mixed>>  $shortageDetails
+     * @param  array<string, mixed>|null  $gatewayPaymentData
+     * @param  \Throwable  $exception
+     * @param  bool  $throwOnError
+     * @return bool
+     *
+     * @throws \Throwable
+     */
+    protected function handleStockShortageOnApprovedPayment(
+        array $shortageDetails,
+        ?array $gatewayPaymentData,
+        Throwable $exception,
+        bool $throwOnError = false
+    ): bool {
+        Log::critical("INCIDENTE CRÍTICO: Orden #{$this->reference} cobrada/aprobada en PlaceToPay (RequestId: {$this->request_id}) pero falló por falta de stock: {$exception->getMessage()}", [
+            'order_id' => $this->id,
+            'reference' => $this->reference,
+            'request_id' => $this->request_id,
+            'total_amount' => $this->total_amount,
+            'customer_email' => $this->customer_email,
+            'shortage_details' => $shortageDetails,
+        ]);
+
+        $reversalResult = null;
+        $reversalSuccessful = false;
+
+        // Attempt automated reversal with payment gateway
+        try {
+            /** @var \App\Contracts\PaymentGatewayInterface $gateway */
+            $gateway = app(PaymentGatewayInterface::class);
+
+            $options = [];
+            if ($gatewayPaymentData) {
+                $payments = $gatewayPaymentData['payment'] ?? [];
+                if (! empty($payments) && is_array($payments)) {
+                    foreach ($payments as $payment) {
+                        if (! empty($payment['internalReference']) && ($payment['status']['status'] ?? '') === 'APPROVED') {
+                            $options['internalReference'] = $payment['internalReference'];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            $reversalResult = $gateway->reversePayment($this, $options);
+            $reversalStatus = strtoupper($reversalResult['status']['status'] ?? '');
+            if (in_array($reversalStatus, ['APPROVED', 'OK'], true)) {
+                $reversalSuccessful = true;
+                Log::info("Reversión automática exitosa en PlaceToPay para orden #{$this->reference}: " . json_encode($reversalResult));
+            } else {
+                Log::warning("Reversión automática fallida o no soportada en PlaceToPay para orden #{$this->reference}: " . json_encode($reversalResult));
+            }
+        } catch (Throwable $revEx) {
+            Log::error("Excepción al intentar reversión automática para orden #{$this->reference}: " . $revEx->getMessage());
+        }
+
+        if ($reversalSuccessful) {
+            $this->update(['status' => self::STATUS_REVERSED]);
+        } else {
+            $this->update(['status' => self::STATUS_REFUND_PENDING]);
+        }
+
+        // Send urgent notification to admin / support
+        try {
+            $supportEmail = config('mail.from.address', 'support@mercatodo.com');
+            Notification::route('mail', $supportEmail)
+                ->notify(new PaymentApprovedStockShortageNotification($this, $shortageDetails, $reversalResult));
+        } catch (Throwable $notifEx) {
+            Log::error("Error enviando notificación de stockout en pago aprobado para orden #{$this->reference}: " . $notifEx->getMessage());
+        }
+
+        if ($throwOnError) {
+            throw $exception;
+        }
+
+        return false;
+    }
+
+    /**
+     * Transition order to rejected status and release any active stock reservation.
      *
      * @return void
      */
     public function markAsRejected(): void
     {
+        $this->releaseReservedStock();
         $this->update(['status' => self::STATUS_REJECTED]);
+    }
+
+    /**
+     * Transition order to cancelled status and release any active stock reservation.
+     *
+     * @return void
+     */
+    public function markAsCancelled(): void
+    {
+        $this->releaseReservedStock();
+        $this->update(['status' => self::STATUS_CANCELLED]);
     }
 
     /**
@@ -298,14 +530,15 @@ class Order extends Model
      * Update order status mapped from PlaceToPay status code.
      *
      * @param  string  $gatewayStatus
+     * @param  array<string, mixed>|null  $gatewayPaymentData
      * @return void
      */
-    public function updateStatusFromGateway(string $gatewayStatus): void
+    public function updateStatusFromGateway(string $gatewayStatus, ?array $gatewayPaymentData = null): void
     {
         $normalized = strtoupper(trim($gatewayStatus));
 
         match ($normalized) {
-            'APPROVED' => $this->markAsApproved(),
+            'APPROVED' => $this->markAsApproved(false, $gatewayPaymentData),
             'REJECTED', 'FAILED', 'PARTIAL_EXPIRED', 'CANCELLED', 'EXPIRED' => $this->markAsRejected(),
             'PENDING', 'OK' => $this->markAsPendingPayment(),
             default => null,

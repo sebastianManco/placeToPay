@@ -103,7 +103,7 @@ class ReconcilePendingOrdersCommand extends Command
                     }
 
                     $previousStatus = $order->status;
-                    $order->updateStatusFromGateway($gatewayStatus);
+                    $order->updateStatusFromGateway($gatewayStatus, $statusData);
                     $order->refresh();
 
                     Log::info("Orden #{$order->reference} (RequestId: {$order->request_id}) reconciliada. Estado pasarela: {$gatewayStatus}. Estado anterior: {$previousStatus}. Estado actual: {$order->status}.");
@@ -111,6 +111,10 @@ class ReconcilePendingOrdersCommand extends Command
                     if ($order->isApproved()) {
                         $approvedCount++;
                         $this->line("<fg=green>✓</> Orden #{$order->reference}: APROBADA (RequestId: {$order->request_id})");
+                    } elseif ($order->isReversed()) {
+                        $this->line("<fg=magenta>↺</> Orden #{$order->reference}: REVERTIDA POR STOCK (RequestId: {$order->request_id})");
+                    } elseif ($order->isRefundPending()) {
+                        $this->line("<fg=red>⚠</> Orden #{$order->reference}: REEMBOLSO PENDIENTE POR STOCK (RequestId: {$order->request_id})");
                     } elseif ($order->isRejected()) {
                         $rejectedCount++;
                         $this->line("<fg=yellow>✗</> Orden #{$order->reference}: RECHAZADA (RequestId: {$order->request_id})");

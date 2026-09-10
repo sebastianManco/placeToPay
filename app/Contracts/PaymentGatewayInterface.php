@@ -35,4 +35,13 @@ interface PaymentGatewayInterface
      * @return bool
      */
     public function isValidWebhookNotification(mixed $request): bool;
+
+    /**
+     * Attempt an automated payment reversal or refund for the given order.
+     *
+     * @param  \App\Models\Order  $order
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function reversePayment(Order $order, array $options = []): array;
 }
