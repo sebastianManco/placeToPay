@@ -11,7 +11,7 @@
             <p class="text-muted mb-0">Monitoreo de ventas, transacciones PlaceToPay, rotación y alertas de inventario.</p>
         </div>
         <div>
-            <button type="button" class="btn btn-primary shadow-sm" data-toggle="modal" data-target="#generateReportModal">
+            <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#generateReportModal">
                 <i class="bi bi-file-earmark-plus me-1"></i> Generar Nuevo Reporte (Encolado)
             </button>
         </div>
@@ -21,18 +21,14 @@
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <strong>¡Excelente!</strong> {{ session('success') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
     @if(session('error'))
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <strong>Atención:</strong> {{ session('error') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
@@ -41,10 +37,10 @@
         <div class="col-xl-3 col-md-6 mb-3">
             <div class="card border-left-primary shadow h-100 py-2 border-primary" style="border-left: 4px solid #0d6efd !important;">
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Ventas Aprobadas</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ number_format($salesMetrics['total_sales'] ?? 0, 2) }} COP</div>
+                    <div class="row g-0 align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">Ventas Aprobadas</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">${{ number_format($salesMetrics['total_sales'] ?? 0, 2) }} COP</div>
                             <small class="text-muted">{{ $salesMetrics['approved_orders_count'] ?? 0 }} pedidos aprobados</small>
                         </div>
                     </div>
@@ -55,10 +51,10 @@
         <div class="col-xl-3 col-md-6 mb-3">
             <div class="card border-left-success shadow h-100 py-2 border-success" style="border-left: 4px solid #198754 !important;">
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Ticket Promedio</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ number_format($salesMetrics['average_ticket'] ?? 0, 2) }} COP</div>
+                    <div class="row g-0 align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">Ticket Promedio</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">${{ number_format($salesMetrics['average_ticket'] ?? 0, 2) }} COP</div>
                             <small class="text-muted">Por orden aprobada</small>
                         </div>
                     </div>
@@ -69,10 +65,10 @@
         <div class="col-xl-3 col-md-6 mb-3">
             <div class="card border-left-info shadow h-100 py-2 border-info" style="border-left: 4px solid #0dcaf0 !important;">
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Tasa de Conversión</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($salesMetrics['conversion_rate'] ?? 0, 2) }}%</div>
+                    <div class="row g-0 align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">Tasa de Conversión</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">{{ number_format($salesMetrics['conversion_rate'] ?? 0, 2) }}%</div>
                             <small class="text-muted">{{ $salesMetrics['total_orders_count'] ?? 0 }} órdenes totales</small>
                         </div>
                     </div>
@@ -83,10 +79,10 @@
         <div class="col-xl-3 col-md-6 mb-3">
             <div class="card border-left-warning shadow h-100 py-2 border-warning" style="border-left: 4px solid #ffc107 !important;">
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Alertas de Inventario</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                    <div class="row g-0 align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">Alertas de Inventario</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">
                                 <span class="text-danger">{{ $inventoryAlerts['out_of_stock_count'] ?? 0 }} agotados</span> / 
                                 <span class="text-warning">{{ $inventoryAlerts['low_stock_count'] ?? 0 }} bajos</span>
                             </div>
@@ -104,8 +100,8 @@
         <div class="col-lg-8 mb-4">
             <div class="card shadow h-100">
                 <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Tendencia de Ventas Aprobadas</h6>
-                    <span class="badge badge-light">Tiempo real</span>
+                    <h6 class="m-0 fw-bold text-primary">Tendencia de Ventas Aprobadas</h6>
+                    <span class="badge bg-light text-dark">Tiempo real</span>
                 </div>
                 <div class="card-body">
                     <canvas id="salesTrendChart" height="110"></canvas>
@@ -117,7 +113,7 @@
         <div class="col-lg-4 mb-4">
             <div class="card shadow h-100">
                 <div class="card-header py-3 bg-white">
-                    <h6 class="m-0 font-weight-bold text-primary">Distribución de Pagos PlaceToPay</h6>
+                    <h6 class="m-0 fw-bold text-primary">Distribución de Pagos PlaceToPay</h6>
                 </div>
                 <div class="card-body d-flex flex-column align-items-center justify-content-center">
                     <div style="width: 100%; max-width: 280px;">
@@ -133,7 +129,7 @@
         <div class="col-lg-6 mb-4">
             <div class="card shadow h-100">
                 <div class="card-header py-3 bg-white">
-                    <h6 class="m-0 font-weight-bold text-primary">Top 5 Productos Más Vendidos (Unidades)</h6>
+                    <h6 class="m-0 fw-bold text-primary">Top 5 Productos Más Vendidos (Unidades)</h6>
                 </div>
                 <div class="card-body">
                     <canvas id="topProductsChart" height="130"></canvas>
@@ -145,7 +141,7 @@
         <div class="col-lg-6 mb-4">
             <div class="card shadow h-100">
                 <div class="card-header py-3 bg-white">
-                    <h6 class="m-0 font-weight-bold text-primary">Diagnóstico y Salud del Catálogo</h6>
+                    <h6 class="m-0 fw-bold text-primary">Diagnóstico y Salud del Catálogo</h6>
                 </div>
                 <div class="card-body">
                     <canvas id="inventoryHealthChart" height="130"></canvas>
@@ -157,7 +153,7 @@
     <!-- Historial de Reportes Encolados -->
     <div class="card shadow mb-4">
         <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">Historial de Reportes Generados</h6>
+            <h6 class="m-0 fw-bold text-primary">Historial de Reportes Generados</h6>
             <button class="btn btn-sm btn-outline-secondary" onclick="window.location.reload();">
                 <i class="bi bi-arrow-clockwise"></i> Refrescar Lista
             </button>
@@ -188,12 +184,12 @@
                                 <tr id="report-row-{{ $rep->id }}" data-report-id="{{ $rep->id }}" data-status="{{ $rep->status }}">
                                     <td><strong>#{{ $rep->id }}</strong></td>
                                     <td>
-                                        <a href="{{ route('admin.reports.show', $rep) }}" class="text-dark font-weight-bold">
+                                        <a href="{{ route('admin.reports.show', $rep) }}" class="text-dark fw-bold">
                                             {{ $rep->title }}
                                         </a>
                                     </td>
-                                    <td><span class="badge badge-secondary">{{ strtoupper($rep->type) }}</span></td>
-                                    <td><span class="badge badge-info">{{ strtoupper($rep->format) }}</span></td>
+                                    <td><span class="badge bg-secondary">{{ strtoupper($rep->type) }}</span></td>
+                                    <td><span class="badge bg-info text-dark">{{ strtoupper($rep->format) }}</span></td>
                                     <td>
                                         @if(!empty($rep->parameters['date_from']) || !empty($rep->parameters['date_to']))
                                             <small>{{ $rep->parameters['date_from'] ?? 'Inicio' }} &rarr; {{ $rep->parameters['date_to'] ?? 'Hoy' }}</small>
@@ -203,13 +199,13 @@
                                     </td>
                                     <td class="status-cell">
                                         @if($rep->status === 'completed')
-                                            <span class="badge badge-success">Completado</span>
+                                            <span class="badge bg-success">Completado</span>
                                         @elseif($rep->status === 'processing')
-                                            <span class="badge badge-primary">Procesando...</span>
+                                            <span class="badge bg-primary">Procesando...</span>
                                         @elseif($rep->status === 'failed')
-                                            <span class="badge badge-danger">Fallido</span>
+                                            <span class="badge bg-danger">Fallido</span>
                                         @else
-                                            <span class="badge badge-warning">En Cola</span>
+                                            <span class="badge bg-warning text-dark">En Cola</span>
                                         @endif
                                     </td>
                                     <td>{{ $rep->user->name ?? 'Admin' }}</td>
@@ -250,21 +246,19 @@
         <form action="{{ route('admin.reports.store') }}" method="POST" class="modal-content">
             @csrf
             <div class="modal-header">
-                <h5 class="modal-title font-weight-bold" id="generateReportModalLabel">Generar Nuevo Reporte</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <h5 class="modal-title fw-bold" id="generateReportModalLabel">Generar Nuevo Reporte</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="form-group mb-3">
-                    <label for="title" class="form-label font-weight-bold">Título o Nombre del Reporte <span class="text-danger">*</span></label>
+                <div class="mb-3">
+                    <label for="title" class="form-label fw-bold">Título o Nombre del Reporte <span class="text-danger">*</span></label>
                     <input type="text" name="title" id="title" class="form-control" placeholder="Ej: Reporte Gerencial Septiembre 2026" required value="{{ old('title') }}">
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6 form-group mb-3">
-                        <label for="type" class="form-label font-weight-bold">Tipo de Reporte <span class="text-danger">*</span></label>
-                        <select name="type" id="type" class="form-control" required>
+                    <div class="col-md-6 mb-3">
+                        <label for="type" class="form-label fw-bold">Tipo de Reporte <span class="text-danger">*</span></label>
+                        <select name="type" id="type" class="form-select" required>
                             <option value="complete">Completo (Ventas, Pagos, Inventario)</option>
                             <option value="sales">Ventas y Facturación</option>
                             <option value="orders">Órdenes por Fechas</option>
@@ -273,9 +267,9 @@
                             <option value="inventory_alerts">Alertas Stock y Rotación</option>
                         </select>
                     </div>
-                    <div class="col-md-6 form-group mb-3">
-                        <label for="format" class="form-label font-weight-bold">Formato de Exportación <span class="text-danger">*</span></label>
-                        <select name="format" id="format" class="form-control" required>
+                    <div class="col-md-6 mb-3">
+                        <label for="format" class="form-label fw-bold">Formato de Exportación <span class="text-danger">*</span></label>
+                        <select name="format" id="format" class="form-select" required>
                             <option value="both">Ambos (PDF + Excel)</option>
                             <option value="pdf">Solo PDF</option>
                             <option value="xlsx">Solo Excel (.xlsx)</option>
@@ -284,22 +278,22 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6 form-group mb-3">
+                    <div class="col-md-6 mb-3">
                         <label for="date_from" class="form-label">Fecha Desde</label>
                         <input type="date" name="date_from" id="date_from" class="form-control" value="{{ old('date_from') }}">
                     </div>
-                    <div class="col-md-6 form-group mb-3">
+                    <div class="col-md-6 mb-3">
                         <label for="date_to" class="form-label">Fecha Hasta</label>
                         <input type="date" name="date_to" id="date_to" class="form-control" value="{{ old('date_to') }}">
                     </div>
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6 form-group mb-3">
+                    <div class="col-md-6 mb-3">
                         <label for="low_stock_threshold" class="form-label">Umbral Stock Bajo</label>
                         <input type="number" name="low_stock_threshold" id="low_stock_threshold" class="form-control" value="5" min="1" max="1000">
                     </div>
-                    <div class="col-md-6 form-group mb-3">
+                    <div class="col-md-6 mb-3">
                         <label for="days_inactive" class="form-label">Días Sin Ventas (Rotación)</label>
                         <input type="number" name="days_inactive" id="days_inactive" class="form-control" value="30" min="1" max="365">
                     </div>
@@ -310,7 +304,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="submit" class="btn btn-primary">Encolar y Generar</button>
             </div>
         </form>
@@ -450,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             row.setAttribute('data-status', 'completed');
                             const statusCell = row.querySelector('.status-cell');
                             if (statusCell) {
-                                statusCell.innerHTML = '<span class="badge badge-success">Completado</span>';
+                                statusCell.innerHTML = '<span class="badge bg-success">Completado</span>';
                             }
                             const actionsCell = row.querySelector('.actions-cell .btn-group');
                             if (actionsCell) {
@@ -468,7 +462,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             row.setAttribute('data-status', 'failed');
                             const statusCell = row.querySelector('.status-cell');
                             if (statusCell) {
-                                statusCell.innerHTML = '<span class="badge badge-danger">Fallido</span>';
+                                statusCell.innerHTML = '<span class="badge bg-danger">Fallido</span>';
                             }
                         } else {
                             activeCount++;

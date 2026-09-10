@@ -37,8 +37,8 @@
                         @csrf   
                         
                         <!---nombre--->
-                        <div class="form-group">
-                            <label for="name"> Full Name </label>
+                        <div class="mb-3">
+                            <label for="name" class="form-label"> Full Name </label>
                             <input type="text" class="form-control" id="name" name="name" placeholder="" value="{{old('name')}}">
                             @error('name')
                                 <small class="text-danger">{{ $message }}</small>
@@ -46,8 +46,8 @@
                         </div>
 
                         <!---Apellido--->
-                        <div class="form-group">
-                            <label for="lastName"> Last Name</label>
+                        <div class="mb-3">
+                            <label for="lastName" class="form-label"> Last Name</label>
                             <input type="text" class="form-control" id="lastName" name="lastName" placeholder="" value="{{old('lastName')}}">
                             @error('lastName')
                                 <small class="text-danger">{{ $message }}</small>
@@ -55,8 +55,8 @@
                         </div>
 
                         <!---email-->
-                        <div class="form-group">
-                            <label for="email"> Email</label>
+                        <div class="mb-3">
+                            <label for="email" class="form-label"> Email</label>
                             <input type="email" class="form-control" id="email" name="email" placeholder="" value="{{old('email')}}">
                             @error('email')
                                 <small class="text-danger">{{ $message }}</small>
@@ -64,8 +64,8 @@
                         </div>
 
                         <!---telefono-->
-                        <div class="form-group">
-                            <label for="phone">phone number</label>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">phone number</label>
                             <input type="text" class="form-control" id="phone" name="phone" placeholder="" value="{{old('phone')}}">
                             @error('phone')
                                 <small class="text-danger">{{ $message }}</small>
@@ -73,8 +73,8 @@
                         </div>
 
                         <!---direccion-->
-                        <div class="form-group">
-                            <label for="direction"> Direction</label>
+                        <div class="mb-3">
+                            <label for="direction" class="form-label"> Direction</label>
                             <input type="text" class="form-control" id="direction" name="direction" placeholder="" value="{{old('direction')}}">
                             @error('direction')
                                 <small class="text-danger">{{ $message }}</small>
@@ -82,26 +82,28 @@
                         </div>
                         
                         <!--tipo de identificacion-->
-                        <label for="cedula"> Type of identification document</label>
-                        <div class="form-check-inline">
-                            <label class="form-check-label">
-                                <input type="checkbox" class="form-check-input" value="">C.C
-                            </label>
-                        </div>
-                        <div class="form-check-inline">
-                            <label class="form-check-label">
-                                <input type="checkbox" class="form-check-input" value="">T.E
-                            </label>
-                        </div>
-                        <div class="form-check-inline">
-                            <label class="form-check-label">
-                                <input type="checkbox" class="form-check-input" value="" >T.I
-                            </label>
+                        <div class="mb-3">
+                            <label for="cedula" class="form-label d-block"> Type of identification document</label>
+                            <div class="form-check form-check-inline">
+                                <label class="form-check-label">
+                                    <input type="checkbox" class="form-check-input" value="">C.C
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <label class="form-check-label">
+                                    <input type="checkbox" class="form-check-input" value="">T.E
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <label class="form-check-label">
+                                    <input type="checkbox" class="form-check-input" value="" >T.I
+                                </label>
+                            </div>
                         </div>
 
                         <!---tipo de documento--->
-                        <div class="form-group">
-                            <label for="identification"> Nº Identification</label>
+                        <div class="mb-3">
+                            <label for="identification" class="form-label"> Nº Identification</label>
                             <input type="text" class="form-control" id="identification" name="identification" placeholder="" value="{{old('identification', old('Identification'))}}">
                             @error('identification')
                                 <small class="text-danger">{{ $message }}</small>
@@ -109,8 +111,8 @@
                         </div> 
 
                         <!---usuario--->
-                        <div class="form-group">
-                            <label for="userName"> User Name</label>
+                        <div class="mb-3">
+                            <label for="userName" class="form-label"> User Name</label>
                             <input type="text" class="form-control" id="userName" name="userName" placeholder="" value="{{old('userName')}}">
                             @error('userName')
                                 <small class="text-danger">{{ $message }}</small>
@@ -118,8 +120,8 @@
                         </div>         
 
                         <!---contraseña--->
-                        <div class="form-group">
-                            <label for="password"> Password</label>
+                        <div class="mb-3">
+                            <label for="password" class="form-label"> Password</label>
                             <input type="password" class="form-control" id="password" name="password" placeholder="" autocomplete="new-password">
                             @error('password')
                                 <small class="text-danger">{{ $message }}</small>
@@ -127,8 +129,8 @@
                         </div>
 
                         <!---confirma contraseña--->
-                        <div class="form-group">
-                            <label for="password_confirmation"> Confirm Password</label>
+                        <div class="mb-3">
+                            <label for="password_confirmation" class="form-label"> Confirm Password</label>
                             <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" placeholder="" autocomplete="new-password">
                         </div>
 

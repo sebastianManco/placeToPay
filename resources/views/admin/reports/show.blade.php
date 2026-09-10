@@ -54,16 +54,16 @@
                 <div class="col-md-3">
                     <strong>Estado:</strong>
                     @if($report->isCompleted())
-                        <span class="badge badge-success">Completado</span>
+                        <span class="badge bg-success">Completado</span>
                     @elseif($report->isFailed())
-                        <span class="badge badge-danger">Fallido</span>
+                        <span class="badge bg-danger">Fallido</span>
                     @else
-                        <span class="badge badge-warning">En Cola</span>
+                        <span class="badge bg-warning text-dark">En Cola</span>
                     @endif
                 </div>
                 <div class="col-md-3">
                     <strong>Formato Solicitado:</strong>
-                    <span class="badge badge-info">{{ strtoupper($report->format) }}</span>
+                    <span class="badge bg-info text-dark">{{ strtoupper($report->format) }}</span>
                 </div>
                 <div class="col-md-3">
                     <strong>Rango de Fechas:</strong>

@@ -15,6 +15,7 @@
     @if (session('error'))
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
@@ -149,20 +150,20 @@
                     @if(isset($roles) && $roles->isNotEmpty())
                         <!-- Roles y Permisos (ACL) -->
                         <div class="col-12 mt-3">
-                            <label class="form-label font-weight-bold">{{ __('Roles Asignados (Control de Acceso / ACL)') }}</label>
+                            <label class="form-label fw-bold">{{ __('Roles Asignados (Control de Acceso / ACL)') }}</label>
                             <div class="card bg-light border-0 p-3">
                                 <div class="row">
                                     @foreach($roles as $r)
                                         <div class="col-md-4 mb-2">
-                                            <div class="custom-control custom-checkbox">
-                                                <input class="custom-control-input"
+                                            <div class="form-check">
+                                                <input class="form-check-input"
                                                        type="checkbox"
                                                        name="roles[]"
                                                        value="{{ $r->id }}"
                                                        id="role_{{ $r->id }}"
                                                        {{ in_array($r->id, old('roles', $clientRoles ?? [])) ? 'checked' : '' }}>
-                                                <label class="custom-control-label" for="role_{{ $r->id }}">
-                                                    <span class="font-weight-bold">{{ $r->name }}</span>
+                                                <label class="form-check-label" for="role_{{ $r->id }}">
+                                                    <span class="fw-bold">{{ $r->name }}</span>
                                                     @if($r->description)
                                                         <br><small class="text-muted">{{ $r->description }}</small>
                                                     @endif
