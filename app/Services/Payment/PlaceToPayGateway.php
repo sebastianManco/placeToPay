@@ -6,6 +6,7 @@ use App\Contracts\PaymentGatewayInterface;
 use App\Models\Order;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -187,5 +188,117 @@ class PlaceToPayGateway implements PaymentGatewayInterface
     public function getBaseUrl(): string
     {
         return $this->baseUrl;
+    }
+
+    /**
+     * Validate the cryptographic signature or authenticity of an incoming webhook notification.
+     * Supports HMAC-SHA256 (via X-Signature header or signature payload field) and PlaceToPay hash standards.
+     *
+     * @param  mixed  $request
+     * @return bool
+     */
+    public function isValidWebhookNotification(mixed $request): bool
+    {
+        if (empty($this->tranKey)) {
+            return false;
+        }
+
+        $content = '';
+        $data = [];
+        $headerSignature = null;
+
+        if ($request instanceof Request) {
+            $content = (string) $request->getContent();
+            $data = $request->all();
+            $headerSignature = $request->header('X-Signature')
+                ?? $request->header('Signature')
+                ?? $request->header('x-signature');
+        } elseif (is_array($request)) {
+            $data = $request;
+            $content = (string) json_encode($request);
+            $headerSignature = $request['headers']['x-signature']
+                ?? $request['headers']['X-Signature']
+                ?? null;
+        } else {
+            return false;
+        }
+
+        $rawSignature = $headerSignature ?? $data['signature'] ?? $data['sign'] ?? null;
+
+        if (empty($rawSignature) || ! is_string($rawSignature)) {
+            return false;
+        }
+
+        // Strip prefixes if present (e.g. "sha256:...", "sha256=...", "sha1:...")
+        $cleanSignature = trim($rawSignature);
+        if (preg_match('/^(?:sha256|sha1)[=:]\s*(.+)$/i', $cleanSignature, $matches)) {
+            $cleanSignature = trim($matches[1]);
+        }
+
+        $requestId = (string) ($data['requestId'] ?? $data['request_id'] ?? '');
+        $status = is_array($data['status'] ?? null)
+            ? (string) ($data['status']['status'] ?? '')
+            : (string) ($data['status'] ?? '');
+        $date = is_array($data['status'] ?? null)
+            ? (string) ($data['status']['date'] ?? '')
+            : (string) ($data['date'] ?? '');
+
+        // Generate valid signature variations across PlaceToPay HMAC and hashing conventions
+        $validSignatures = [];
+
+        // 1. HMAC-SHA256 of raw body (Standard PlaceToPay webhook / X-Signature)
+        if ($content !== '') {
+            $validSignatures[] = hash_hmac('sha256', $content, $this->tranKey);
+            $validSignatures[] = base64_encode(hash_hmac('sha256', $content, $this->tranKey, true));
+        }
+
+        // 2. HMAC-SHA256 of concatenated fields (requestId + status + date)
+        if ($requestId !== '' || $status !== '') {
+            $concatWithDate = $requestId . $status . $date;
+            $validSignatures[] = hash_hmac('sha256', $concatWithDate, $this->tranKey);
+            $validSignatures[] = base64_encode(hash_hmac('sha256', $concatWithDate, $this->tranKey, true));
+
+            // HMAC-SHA256 of requestId + status
+            $concatWithoutDate = $requestId . $status;
+            $validSignatures[] = hash_hmac('sha256', $concatWithoutDate, $this->tranKey);
+
+            // HMAC-SHA256 of requestId alone
+            if ($requestId !== '') {
+                $validSignatures[] = hash_hmac('sha256', $requestId, $this->tranKey);
+            }
+
+            // Standard PlaceToPay WebCheckout SHA-256 hash
+            $validSignatures[] = hash('sha256', $concatWithDate . $this->tranKey);
+            $validSignatures[] = hash('sha256', $concatWithoutDate . $this->tranKey);
+
+            // Standard PlaceToPay WebCheckout SHA-1 hash
+            $validSignatures[] = sha1($concatWithDate . $this->tranKey);
+            $validSignatures[] = sha1($concatWithoutDate . $this->tranKey);
+
+            // HMAC-SHA1
+            $validSignatures[] = hash_hmac('sha1', $concatWithDate, $this->tranKey);
+        }
+
+        // Constant-time comparison against each valid candidate to prevent timing attacks
+        foreach ($validSignatures as $candidate) {
+            if (hash_equals(strtolower($candidate), strtolower($cleanSignature)) || hash_equals($candidate, $cleanSignature)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Generate HMAC-SHA256 signature for webhook parameters.
+     *
+     * @param  string|int  $requestId
+     * @param  string  $status
+     * @param  string  $date
+     * @return string
+     */
+    public function generateWebhookSignature(string|int $requestId, string $status, string $date): string
+    {
+        return hash_hmac('sha256', "{$requestId}{$status}{$date}", $this->tranKey);
     }
 }

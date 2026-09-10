@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use RuntimeException;
+use Throwable;
 
 /**
  * Class Order
@@ -204,13 +208,70 @@ class Order extends Model
     }
 
     /**
-     * Transition order to approved status.
+     * Transition order to approved status and deduct inventory stock with pessimistic locking.
+     * Prevents race conditions and overselling using lockForUpdate().
+     * If stock is insufficient, rolls back all changes and transitions order to rejected status.
      *
-     * @return void
+     * @param  bool  $throwOnError
+     * @return bool Returns true if approved, false if rejected due to insufficient stock or error.
+     *
+     * @throws \Throwable
      */
-    public function markAsApproved(): void
+    public function markAsApproved(bool $throwOnError = false): bool
     {
-        $this->update(['status' => self::STATUS_APPROVED]);
+        if ($this->status === self::STATUS_APPROVED) {
+            return true;
+        }
+
+        try {
+            DB::transaction(function () {
+                $items = $this->items()->get();
+                $quantitiesByProduct = [];
+
+                foreach ($items as $item) {
+                    if ($item->product_id) {
+                        $quantitiesByProduct[$item->product_id] = ($quantitiesByProduct[$item->product_id] ?? 0) + $item->quantity;
+                    }
+                }
+
+                // Deterministic sort order by product ID to prevent deadlock between concurrent transactions
+                ksort($quantitiesByProduct);
+
+                $lockedProducts = [];
+                foreach ($quantitiesByProduct as $productId => $requiredQuantity) {
+                    /** @var Product|null $product */
+                    $product = Product::where('id', $productId)->lockForUpdate()->first();
+
+                    if (! $product || $product->stock < $requiredQuantity) {
+                        $productName = $product ? $product->name : "ID {$productId}";
+                        $available = $product ? $product->stock : 0;
+                        throw new RuntimeException("Stock insuficiente para el producto '{$productName}'. Requerido: {$requiredQuantity}, Disponible: {$available}.");
+                    }
+
+                    $lockedProducts[] = [
+                        'model' => $product,
+                        'quantity' => $requiredQuantity,
+                    ];
+                }
+
+                foreach ($lockedProducts as $entry) {
+                    $entry['model']->decrement('stock', $entry['quantity']);
+                }
+
+                $this->update(['status' => self::STATUS_APPROVED]);
+            });
+
+            return true;
+        } catch (Throwable $e) {
+            $this->markAsRejected();
+            Log::warning("Orden #{$this->reference} rechazada al procesar aprobación por falta de existencias: " . $e->getMessage());
+
+            if ($throwOnError) {
+                throw $e;
+            }
+
+            return false;
+        }
     }
 
     /**

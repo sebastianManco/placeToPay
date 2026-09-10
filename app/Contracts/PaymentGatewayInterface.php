@@ -27,4 +27,12 @@ interface PaymentGatewayInterface
      * @return array<string, mixed>
      */
     public function getSessionStatus(string|int $requestId): array;
+
+    /**
+     * Validate the cryptographic signature or authenticity of an incoming webhook notification.
+     *
+     * @param  mixed  $request
+     * @return bool
+     */
+    public function isValidWebhookNotification(mixed $request): bool;
 }
