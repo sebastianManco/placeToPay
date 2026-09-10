@@ -95,3 +95,30 @@ En caso de error de validación (`422 Unprocessable Entity`):
 - **Base de Datos**: MySQL 8.x / MariaDB
 - **Servidor Web / Contenedores**: Docker & Docker Compose
 - **Cola de Procesos**: Worker de Laravel (`php artisan queue:work`) para reportes en segundo plano
+
+---
+
+## 🔍 Análisis Estático de Código (PHPStan / Larastan)
+
+El proyecto cuenta con **PHPStan** configurado a través de **Larastan** (Nivel 5) para garantizar la calidad del código, tipado estricto y prevención de errores en tiempo de ejecución.
+
+### Ejecución del análisis:
+
+- **Desde Windows (script directo):**
+  ```powershell
+  .\phpstan.cmd
+  # o pasando opciones adicionales
+  .\phpstan.cmd analyse --error-format=table
+  ```
+
+- **A través de Composer / Docker:**
+  ```powershell
+  docker compose exec app composer phpstan
+  # o directamente
+  docker compose exec app php vendor/bin/phpstan analyse
+  ```
+
+- **Generar o actualizar línea base (Baseline):**
+  ```powershell
+  docker compose exec app php vendor/bin/phpstan analyse --generate-baseline
+  ```
