@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
 
 /**
  * Class PaymentController
@@ -81,6 +82,14 @@ class PaymentController extends Controller
         }
 
         try {
+            // Reserve stock under pessimistic lock before initiating payment session
+            $order->reserveStock();
+        } catch (RuntimeException $e) {
+            return redirect()->route('orders.show', $order->id)
+                ->with('error', $e->getMessage());
+        }
+
+        try {
             $session = $this->gateway->createSession($order, [
                 'returnUrl' => route('payment.response', $order->id),
                 'ipAddress' => $request->ip(),
@@ -100,6 +109,8 @@ class PaymentController extends Controller
             return redirect()->route('orders.show', $order->id)
                 ->with('error', 'No fue posible obtener la URL de procesamiento de pago.');
         } catch (Exception $e) {
+            // Release reserved stock if session creation with gateway fails
+            $order->releaseReservedStock();
             Log::error("Error al iniciar sesión de pago para orden #{$order->reference}: " . $e->getMessage());
 
             return redirect()->route('orders.show', $order->id)
@@ -124,7 +135,7 @@ class PaymentController extends Controller
             try {
                 $statusData = $this->gateway->getSessionStatus($order->request_id);
                 $gatewayStatus = $statusData['status']['status'] ?? 'PENDING';
-                $order->updateStatusFromGateway($gatewayStatus);
+                $order->updateStatusFromGateway($gatewayStatus, $statusData);
             } catch (Exception $e) {
                 Log::error("Error consultando estado en retorno de orden #{$order->reference}: " . $e->getMessage());
             }
@@ -135,6 +146,16 @@ class PaymentController extends Controller
         if ($order->isApproved()) {
             return redirect()->route('orders.show', $order->id)
                 ->with('success', '¡Transacción aprobada! Tu pago ha sido procesado con éxito.');
+        }
+
+        if ($order->isReversed()) {
+            return redirect()->route('orders.show', $order->id)
+                ->with('warning', 'Tu pago fue recibido en la pasarela pero se presentó agotamiento de inventario. Se ha procesado la reversión automática de tus fondos.');
+        }
+
+        if ($order->isRefundPending()) {
+            return redirect()->route('orders.show', $order->id)
+                ->with('warning', 'Tu pago fue recibido en la pasarela, pero ocurrió una inconsistencia de existencias. Nuestro equipo de soporte ha sido notificado prioritariamente para gestionar el despacho o reembolso.');
         }
 
         if ($order->isRejected()) {
@@ -186,7 +207,7 @@ class PaymentController extends Controller
             // Verify and fetch authoritative status directly from the gateway
             $statusData = $this->gateway->getSessionStatus($requestId);
             $gatewayStatus = $statusData['status']['status'] ?? 'PENDING';
-            $order->updateStatusFromGateway($gatewayStatus);
+            $order->updateStatusFromGateway($gatewayStatus, $statusData);
 
             return response()->json([
                 'status' => 'OK',

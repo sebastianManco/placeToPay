@@ -133,6 +133,10 @@
                                             <span class="badge bg-danger px-2 py-1">{{ __('Rechazado') }}</span>
                                         @elseif ($order->status === 'cancelled')
                                             <span class="badge bg-secondary px-2 py-1">{{ __('Cancelado') }}</span>
+                                        @elseif ($order->status === 'refund_pending')
+                                            <span class="badge bg-warning text-dark px-2 py-1">{{ __('Reembolso Pendiente') }}</span>
+                                        @elseif ($order->status === 'reversed')
+                                            <span class="badge bg-dark px-2 py-1">{{ __('Revertido') }}</span>
                                         @else
                                             <span class="badge bg-info text-dark px-2 py-1">{{ $order->status }}</span>
                                         @endif
