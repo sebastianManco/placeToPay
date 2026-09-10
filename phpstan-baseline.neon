@@ -1,0 +1,403 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^PHPDoc type array of property App\\Exceptions\\Handler\:\:\$dontFlash is not covariant with PHPDoc type array\<int, string\> of overridden property Illuminate\\Foundation\\Exceptions\\Handler\:\:\$dontFlash\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Exceptions/Handler.php
+
+		-
+			message: '#^PHPDoc type array of property App\\Exceptions\\Handler\:\:\$dontReport is not covariant with PHPDoc type array\<int, class\-string\<Throwable\>\> of overridden property Illuminate\\Foundation\\Exceptions\\Handler\:\:\$dontReport\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Exceptions/Handler.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:filter\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/CategoryApiController.php
+
+		-
+			message: '#^Access to an undefined property App\\Services\\Product\\ProductImportResult\:\:\$created\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/ProductApiController.php
+
+		-
+			message: '#^Access to an undefined property App\\Services\\Product\\ProductImportResult\:\:\$updated\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/ProductApiController.php
+
+		-
+			message: '#^Class Fruitcake\\Cors\\HandleCors not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Kernel.php
+
+		-
+			message: '#^PHPDoc type array of property App\\Http\\Kernel\:\:\$middleware is not covariant with PHPDoc type array\<int, string\> of overridden property Illuminate\\Foundation\\Http\\Kernel\:\:\$middleware\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Http/Kernel.php
+
+		-
+			message: '#^PHPDoc type array of property App\\Http\\Kernel\:\:\$middlewareGroups is not covariant with PHPDoc type array\<string, array\<int, string\>\> of overridden property Illuminate\\Foundation\\Http\\Kernel\:\:\$middlewareGroups\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Http/Kernel.php
+
+		-
+			message: '#^PHPDoc type array of property App\\Http\\Kernel\:\:\$routeMiddleware is not covariant with PHPDoc type array\<string, string\> of overridden property Illuminate\\Foundation\\Http\\Kernel\:\:\$routeMiddleware\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Http/Kernel.php
+
+		-
+			message: '#^Method App\\Http\\Middleware\\Authenticate\:\:redirectTo\(\) should return string\|null but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: app/Http/Middleware/Authenticate.php
+
+		-
+			message: '#^PHPDoc type array of property App\\Http\\Middleware\\CheckForMaintenanceMode\:\:\$except is not covariant with PHPDoc type array\<int, string\> of overridden property Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance\:\:\$except\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Http/Middleware/CheckForMaintenanceMode.php
+
+		-
+			message: '#^PHPDoc type array of property App\\Http\\Middleware\\EncryptCookies\:\:\$except is not covariant with PHPDoc type array\<int, string\> of overridden property Illuminate\\Cookie\\Middleware\\EncryptCookies\:\:\$except\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Http/Middleware/EncryptCookies.php
+
+		-
+			message: '#^PHPDoc type array of property App\\Http\\Middleware\\TrimStrings\:\:\$except is not covariant with PHPDoc type array\<int, string\> of overridden property Illuminate\\Foundation\\Http\\Middleware\\TrimStrings\:\:\$except\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Http/Middleware/TrimStrings.php
+
+		-
+			message: '#^Access to undefined constant Illuminate\\Http\\Request\:\:HEADER_X_FORWARDED_ALL\.$#'
+			identifier: classConstant.notFound
+			count: 1
+			path: app/Http/Middleware/TrustProxies.php
+
+		-
+			message: '#^PHPDoc type array of property App\\Http\\Middleware\\VerifyCsrfToken\:\:\$except is not covariant with PHPDoc type array\<int, string\> of overridden property Illuminate\\Foundation\\Http\\Middleware\\VerifyCsrfToken\:\:\$except\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Http/Middleware/VerifyCsrfToken.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CategoryResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CategoryResource\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CategoryResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CategoryResource\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CategoryResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CategoryResource\:\:\$products_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\CategoryResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ProductResource\:\:\$category_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ProductResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ProductResource\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ProductResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ProductResource\:\:\$image\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ProductResource\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ProductResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ProductResource\:\:\$price\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ProductResource\:\:\$stock\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/V1/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ProductResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ReportResource\:\:\$completed_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ReportResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ReportResource\:\:\$error_message\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ReportResource\:\:\$format\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ReportResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ReportResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ReportResource\:\:\$summary_data\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ReportResource\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ReportResource\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ReportResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\V1\\ReportResource\:\:\$user_identification\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Resources\\V1\\ReportResource\:\:hasExcel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Resources\\V1\\ReportResource\:\:hasPdf\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Resources\\V1\\ReportResource\:\:isCompleted\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Resources\\V1\\ReportResource\:\:isFailed\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Resources\\V1\\ReportResource\:\:isPending\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Resources\\V1\\ReportResource\:\:isProcessing\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Resources/V1/ReportResource.php
+
+		-
+			message: '#^Property App\\Models\\OrderItem\:\:\$subtotal \(float\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Models/OrderItem.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Models/User.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Support\\HigherOrderCollectionProxy\<string, Illuminate\\Database\\Eloquent\\Model, Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\>\:\:\$permissions\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Models/User.php
+
+		-
+			message: '#^PHPDoc type array of property App\\Providers\\AuthServiceProvider\:\:\$policies is not covariant with PHPDoc type array\<class\-string, class\-string\> of overridden property Illuminate\\Foundation\\Support\\Providers\\AuthServiceProvider\:\:\$policies\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Providers/AuthServiceProvider.php
+
+		-
+			message: '#^PHPDoc type array of property App\\Providers\\EventServiceProvider\:\:\$listen is not covariant with PHPDoc type array\<string, array\<int, string\>\> of overridden property Illuminate\\Foundation\\Support\\Providers\\EventServiceProvider\:\:\$listen\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Providers/EventServiceProvider.php
+
+		-
+			message: '#^Anonymous function has an unused use \$items\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: app/Services/CartService.php
+
+		-
+			message: '#^Property App\\Models\\OrderItem\:\:\$subtotal \(float\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 2
+			path: app/Services/CartService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Product/ProductSpreadsheetService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/Product/ProductSpreadsheetService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Order\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Report/ReportService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Order\:\:\$count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Report/ReportService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Order\:\:\$daily_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Report/ReportService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Order\:\:\$daily_total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Report/ReportService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Order\:\:\$sale_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Report/ReportService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\OrderItem\:\:\$total_quantity\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/Report/ReportService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\OrderItem\:\:\$total_revenue\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/Report/ReportService.php
+
+		-
+			message: '#^Parameter \#2 \$autoIncrement of method Illuminate\\Database\\Schema\\Blueprint\:\:integer\(\) expects bool, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: database/migrations/2020_06_14_050535_create_user_table.php
