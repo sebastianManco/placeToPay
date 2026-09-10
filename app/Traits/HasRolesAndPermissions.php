@@ -35,11 +35,6 @@ trait HasRolesAndPermissions
         foreach ($roleList as $role) {
             $slug = $role instanceof Role ? $role->slug : $role;
 
-            // Check legacy role column first for backward compatibility
-            if (isset($this->attributes['role']) && $this->attributes['role'] === $slug) {
-                return true;
-            }
-
             // Check relationship roles
             if ($this->roles->contains(function ($item) use ($slug) {
                 return $item->slug === $slug || $item->name === $slug;
@@ -213,16 +208,15 @@ trait HasRolesAndPermissions
     public function assignRole(string|Role $role): self
     {
         $roleModel = is_string($role)
-            ? Role::where('slug', $role)->orWhere('name', $role)->firstOrFail()
+            ? (Role::where('slug', $role)->orWhere('name', $role)->first()
+                ?? Role::create([
+                    'slug' => $role,
+                    'name' => ucfirst(str_replace('_', ' ', $role)),
+                    'is_system' => in_array($role, ['admin', 'client']),
+                ]))
             : $role;
 
         $this->roles()->syncWithoutDetaching([$roleModel->id]);
-
-        // Keep legacy role attribute in sync if not already set or if assigning admin
-        if ($roleModel->slug === 'admin' && isset($this->attributes['role'])) {
-            $this->attributes['role'] = 'admin';
-            $this->saveQuietly();
-        }
 
         // Reload relationship
         $this->unsetRelation('roles');
@@ -263,10 +257,13 @@ trait HasRolesAndPermissions
             } elseif (is_numeric($role)) {
                 $ids[] = (int) $role;
             } elseif (is_string($role)) {
-                $id = Role::where('slug', $role)->orWhere('name', $role)->value('id');
-                if ($id) {
-                    $ids[] = $id;
-                }
+                $roleModel = Role::where('slug', $role)->orWhere('name', $role)->first()
+                    ?? Role::create([
+                        'slug' => $role,
+                        'name' => ucfirst(str_replace('_', ' ', $role)),
+                        'is_system' => in_array($role, ['admin', 'client']),
+                    ]);
+                $ids[] = $roleModel->id;
             }
         }
 

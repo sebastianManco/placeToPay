@@ -239,12 +239,13 @@ class RoleAndPermissionSeeder extends Seeder
             ]
         );
 
-        // Asignar roles a usuarios existentes según su campo role
-        User::where('role', 'admin')->each(function (User $user) use ($adminRole) {
+        // Asignar rol admin al usuario administrador por defecto si ya existe
+        User::where('email', 'admin@placetopay.com')->each(function (User $user) use ($adminRole) {
             $user->assignRole($adminRole);
         });
 
-        User::where('role', 'client')->each(function (User $user) use ($clientRole) {
+        // Asegurar que usuarios sin roles reciban el rol de cliente
+        User::whereDoesntHave('roles')->each(function (User $user) use ($clientRole) {
             $user->assignRole($clientRole);
         });
     }

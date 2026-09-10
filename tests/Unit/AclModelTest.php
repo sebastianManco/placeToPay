@@ -155,16 +155,19 @@ class AclModelTest extends TestCase
 
     public function test_admin_user_has_all_permissions_automatically(): void
     {
-        $legacyAdmin = $this->createUser(['role' => 'admin']);
-        $this->assertTrue($legacyAdmin->isAdmin());
-        $this->assertTrue($legacyAdmin->hasPermission('any.nonexistent.permission'));
-        $this->assertTrue($legacyAdmin->hasAnyPermission(['nonexistent1', 'nonexistent2']));
-        $this->assertTrue($legacyAdmin->hasAllPermissions(['nonexistent1', 'nonexistent2']));
-        $this->assertTrue($legacyAdmin->hasAnyAdminPermission());
+        // Admin created with role attribute mapped to ACL pivot
+        $admin = $this->createUser(['role' => 'admin']);
+        $this->assertTrue($admin->isAdmin());
+        $this->assertEquals('admin', $admin->role);
+        $this->assertTrue($admin->hasRole('admin'));
+        $this->assertTrue($admin->hasPermission('any.nonexistent.permission'));
+        $this->assertTrue($admin->hasAnyPermission(['nonexistent1', 'nonexistent2']));
+        $this->assertTrue($admin->hasAllPermissions(['nonexistent1', 'nonexistent2']));
+        $this->assertTrue($admin->hasAnyAdminPermission());
 
-        // Also test user with role 'admin' assigned via ACL
+        // Also test user with role 'admin' assigned via ACL model explicitly
         $aclAdmin = $this->createUser(['role' => 'client']);
-        $adminRole = Role::create(['name' => 'Admin', 'slug' => 'admin']);
+        $adminRole = Role::firstOrCreate(['slug' => 'admin'], ['name' => 'Admin']);
         $aclAdmin->assignRole($adminRole);
 
         $this->assertTrue($aclAdmin->isAdmin());
