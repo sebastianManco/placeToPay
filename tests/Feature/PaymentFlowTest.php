@@ -203,7 +203,10 @@ class PaymentFlowTest extends TestCase
         ]);
 
         // Webhook is called server-to-server with JSON payload
-        $response = $this->postJson(route('payment.notification'), [
+        $tranKey = (string) config('placetopay.tranKey', 'test_tran_key_12345');
+        $signature = hash_hmac('sha256', '50005', $tranKey);
+
+        $response = $this->withHeaders(['X-Signature' => $signature])->postJson(route('payment.notification'), [
             'requestId' => 50005,
             'status' => [
                 'status' => 'APPROVED',

@@ -14,14 +14,7 @@ trait HasRolesAndPermissions
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Role::class,
-            'role_user',
-            'user_id',
-            'role_id',
-            'identification',
-            'id'
-        );
+        return $this->belongsToMany(Role::class);
     }
 
     /**
@@ -29,14 +22,7 @@ trait HasRolesAndPermissions
      */
     public function permissions(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Permission::class,
-            'permission_user',
-            'user_id',
-            'permission_id',
-            'identification',
-            'id'
-        );
+        return $this->belongsToMany(Permission::class);
     }
 
     /**

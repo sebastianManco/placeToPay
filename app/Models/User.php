@@ -7,10 +7,11 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable, HasRolesAndPermissions;
+    use HasApiTokens, HasFactory, Notifiable, HasRolesAndPermissions;
 
     /**
      * The table associated with the model.
@@ -18,27 +19,6 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var string
      */
     protected $table = 'users';
-
-    /**
-     * The primary key associated with the table.
-     *
-     * @var string
-     */
-    protected $primaryKey = 'identification';
-
-    /**
-     * Indicates if the model's ID is auto-incrementing.
-     *
-     * @var bool
-     */
-    public $incrementing = false;
-
-    /**
-     * The data type of the primary key ID.
-     *
-     * @var string
-     */
-    protected $keyType = 'int';
 
     /**
      * The attributes that are mass assignable.
@@ -119,6 +99,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public function setDirectionAttribute(?string $value): void
     {
         $this->attributes['Direction'] = $value;
+    }
+
+    /**
+     * Get the route key for the model.
+     * Preserves route model binding on identification while using id as the primary key.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'identification';
     }
 }
 

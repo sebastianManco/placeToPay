@@ -4,7 +4,9 @@ namespace Tests\Feature\Api\V1;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class CategoryApiTest extends TestCase
@@ -12,7 +14,47 @@ class CategoryApiTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Test listing categories with pagination.
+     * Helper to create an admin user for testing.
+     */
+    protected function createAdminUser(): User
+    {
+        return User::create([
+            'identification' => 70000001,
+            'name' => 'Admin',
+            'last_Name' => 'CategoryTester',
+            'email' => 'admin.category@test.com',
+            'phone' => '3001234567',
+            'direction' => 'Category Avenue',
+            'user_name' => 'admincat',
+            'password' => 'secret123',
+            'email_verified_at' => now(),
+            'is_active' => true,
+            'role' => 'admin',
+        ]);
+    }
+
+    /**
+     * Helper to create a regular client user without category management permissions.
+     */
+    protected function createClientUser(): User
+    {
+        return User::create([
+            'identification' => 70000002,
+            'name' => 'Client',
+            'last_Name' => 'CategoryTester',
+            'email' => 'client.category@test.com',
+            'phone' => '3009876543',
+            'direction' => 'Client Road',
+            'user_name' => 'clientcat',
+            'password' => 'secret123',
+            'email_verified_at' => now(),
+            'is_active' => true,
+            'role' => 'client',
+        ]);
+    }
+
+    /**
+     * Test listing categories with pagination (Public Endpoint).
      */
     public function test_can_list_categories_with_pagination(): void
     {
@@ -56,7 +98,7 @@ class CategoryApiTest extends TestCase
     }
 
     /**
-     * Test filtering categories by active status.
+     * Test filtering categories by active status (Public Endpoint).
      */
     public function test_can_filter_categories_by_status(): void
     {
@@ -73,7 +115,7 @@ class CategoryApiTest extends TestCase
     }
 
     /**
-     * Test searching categories by name keyword.
+     * Test searching categories by name keyword (Public Endpoint).
      */
     public function test_can_search_categories_by_name(): void
     {
@@ -89,10 +131,40 @@ class CategoryApiTest extends TestCase
     }
 
     /**
+     * Test unauthenticated request to create category returns 401.
+     */
+    public function test_unauthenticated_user_cannot_create_category(): void
+    {
+        $response = $this->postJson(route('api.v1.categories.store'), [
+            'name' => 'Categoría Sin Autenticar',
+        ]);
+
+        $response->assertUnauthorized();
+    }
+
+    /**
+     * Test client without permissions gets 403 Forbidden.
+     */
+    public function test_client_without_permission_cannot_create_category(): void
+    {
+        $client = $this->createClientUser();
+        Sanctum::actingAs($client, ['*']);
+
+        $response = $this->postJson(route('api.v1.categories.store'), [
+            'name' => 'Categoría Prohibida',
+        ]);
+
+        $response->assertForbidden();
+    }
+
+    /**
      * Test creating a new category returns 201 Created with Location header.
      */
     public function test_can_create_category(): void
     {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         $payload = [
             'name' => 'Electrodomésticos',
             'description' => 'Aparatos electrónicos para el hogar',
@@ -123,6 +195,9 @@ class CategoryApiTest extends TestCase
      */
     public function test_cannot_create_category_with_invalid_data(): void
     {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         Category::factory()->create(['name' => 'Calzado']);
 
         // Missing name
@@ -143,7 +218,7 @@ class CategoryApiTest extends TestCase
     }
 
     /**
-     * Test retrieving a single category.
+     * Test retrieving a single category (Public Endpoint).
      */
     public function test_can_show_category(): void
     {
@@ -178,6 +253,9 @@ class CategoryApiTest extends TestCase
      */
     public function test_can_update_category_via_put(): void
     {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         $category = Category::factory()->create([
             'name' => 'Nombre Viejo',
             'description' => 'Desc Vieja',
@@ -213,6 +291,9 @@ class CategoryApiTest extends TestCase
      */
     public function test_can_update_category_via_patch(): void
     {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         $category = Category::factory()->create([
             'name' => 'Computadores',
             'description' => 'Laptops y Desktop',
@@ -245,6 +326,9 @@ class CategoryApiTest extends TestCase
      */
     public function test_can_delete_empty_category(): void
     {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         $category = Category::factory()->create();
 
         $response = $this->deleteJson(route('api.v1.categories.destroy', $category));
@@ -258,6 +342,9 @@ class CategoryApiTest extends TestCase
      */
     public function test_cannot_delete_category_with_products_without_force(): void
     {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         $category = Category::factory()->create();
         $product = Product::factory()->create(['category_id' => $category->id]);
 
@@ -277,6 +364,9 @@ class CategoryApiTest extends TestCase
      */
     public function test_can_delete_category_with_products_when_forced(): void
     {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         $category = Category::factory()->create();
         $product = Product::factory()->create(['category_id' => $category->id]);
 
@@ -289,7 +379,7 @@ class CategoryApiTest extends TestCase
     }
 
     /**
-     * Test nested sub-resource endpoint /api/v1/categories/{category}/products.
+     * Test nested sub-resource endpoint /api/v1/categories/{category}/products (Public Endpoint).
      */
     public function test_can_list_products_of_category(): void
     {

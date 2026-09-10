@@ -395,9 +395,3 @@ parameters:
 			identifier: property.notFound
 			count: 2
 			path: app/Services/Report/ReportService.php
-
-		-
-			message: '#^Parameter \#2 \$autoIncrement of method Illuminate\\Database\\Schema\\Blueprint\:\:integer\(\) expects bool, int given\.$#'
-			identifier: argument.type
-			count: 1
-			path: database/migrations/2020_06_14_050535_create_user_table.php

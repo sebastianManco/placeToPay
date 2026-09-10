@@ -28,7 +28,10 @@ class EmailVerificationController extends Controller
      */
     public function verify(Request $request, string $id, string $hash): RedirectResponse
     {
-        if (! hash_equals((string) $id, (string) $request->user()->getKey())) {
+        $expectedKey = (string) $request->user()->getKey();
+        $expectedIdentification = (string) ($request->user()->identification ?? '');
+
+        if (! hash_equals($expectedKey, (string) $id) && ! hash_equals($expectedIdentification, (string) $id)) {
             throw new AuthorizationException('Invalid user identification.');
         }
 
