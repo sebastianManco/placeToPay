@@ -19,11 +19,12 @@ Esta API ha sido concebida, diseñada e implementada bajo las directrices del bl
 3. [Convenciones Globales y Cabeceras](#3-convenciones-globales-y-cabeceras)
 4. [Estructura Uniforme de Respuestas (JSON Envelope)](#4-estructura-uniforme-de-respuestas-json-envelope)
 5. [Códigos de Estado HTTP Utilizados](#5-códigos-de-estado-http-utilizados)
-6. [Módulo de Categorías (`/api/v1/categories`)](#6-módulo-de-categorías)
-7. [Módulo de Productos (`/api/v1/products`)](#7-módulo-de-productos)
-8. [Módulo de Reportes y Analítica (`/api/v1/reports`)](#8-módulo-de-reportes-y-analítica)
-9. [Importación y Exportación Masiva de Productos](#9-importación-y-exportación-masiva-de-productos)
-10. [Pruebas Automatizadas en Postman](#10-pruebas-automatizadas-en-postman)
+6. [Módulo de Autenticación (`/api/v1/auth`)](#6-módulo-de-autenticación)
+7. [Módulo de Categorías (`/api/v1/categories`)](#7-módulo-de-categorías)
+8. [Módulo de Productos (`/api/v1/products`)](#8-módulo-de-productos)
+9. [Módulo de Reportes y Analítica (`/api/v1/reports`)](#9-módulo-de-reportes-y-analítica)
+10. [Importación y Exportación Masiva de Productos](#10-importación-y-exportación-masiva-de-productos)
+11. [Pruebas Automatizadas en Postman](#11-pruebas-automatizadas-en-postman)
 
 ---
 
@@ -74,6 +75,9 @@ Para que cualquier petición sea procesada adecuadamente por la API, aplique sie
 2. **Cabecera `Content-Type: application/json` (En peticiones con cuerpo)**:
    - Obligatoria al enviar datos en peticiones `POST`, `PUT` o `PATCH` con formato JSON.
    - **Excepción**: Al enviar archivos o imágenes (como en la subida de imágenes o importación Excel), use `multipart/form-data` (la herramienta o biblioteca HTTP asignará el `Content-Type` correspondiente automáticamente con su boundary).
+3. **Cabecera `Authorization: Bearer <token>` (En endpoints protegidos)**:
+   - Obligatoria para todas las operaciones mutadoras (`POST`, `PUT`, `PATCH`, `DELETE`), exportación/importación y el módulo completo de reportes y analíticas.
+   - El token se obtiene mediante el endpoint público `POST /api/v1/auth/login`.
 
 ---
 
@@ -335,6 +339,7 @@ http://localhost:8000/api/v1
 | :--- | :--- | :--- |
 | `Accept` | `application/json` | Solicita explícitamente formato JSON para evitar respuestas HTML ante errores. |
 | `Content-Type` | `application/json` | Requerido en peticiones `POST`, `PUT`, `PATCH` con cuerpo JSON (excepto multipart). |
+| `Authorization` | `Bearer <token>` | Requerido en todos los endpoints protegidos y administrativos (Sanctum). |
 
 ---
 
@@ -429,13 +434,142 @@ Todas las respuestas de la API cumplen con esquemas consistentes y unificados.
 
 ---
 
-## 6. Módulo de Categorías
+## 6. Módulo de Autenticación
+
+Ruta base: `/api/v1/auth`
+
+Este módulo gestiona la emisión y revocación de Bearer Tokens basados en **Laravel Sanctum**, vinculando al token las habilidades (`abilities`) correspondientes al rol y permisos granulares ACL asignados al usuario.
+
+### 6.1. Iniciar Sesión y Obtener Bearer Token
+- **Método**: `POST`
+- **URI**: `/api/v1/auth/login`
+- **Acceso**: Público
+- **Rate Limiting**: 5 intentos por minuto por combinación correo/IP.
+- **Cuerpo de la Petición (`application/json`)**:
+```json
+{
+  "email": "admin@placetopay.com",
+  "password": "Password123*",
+  "device_name": "postman-desktop"
+}
+```
+- **Campos**:
+  - `email` *(string, obligatorio, email válido)*: Correo electrónico del usuario registrado.
+  - `password` *(string, obligatorio)*: Contraseña de la cuenta.
+  - `device_name` *(string, opcional, máx 100 caracteres)*: Identificador del cliente o dispositivo (por defecto: `api-client`).
+- **Respuesta Exitosa (`200 OK`)**:
+```json
+{
+  "success": true,
+  "message": "Autenticación exitosa.",
+  "data": {
+    "token": "1|abcdef1234567890abcdef1234567890...",
+    "token_type": "Bearer",
+    "user": {
+      "id": 1,
+      "identification": 10000001,
+      "name": "Admin",
+      "last_name": "PlaceToPay",
+      "email": "admin@placetopay.com",
+      "phone": "3001234567",
+      "direction": "Calle 10 # 20-30",
+      "is_active": true,
+      "role": "admin",
+      "roles": {
+        "admin": "Administrador General"
+      },
+      "permissions": [
+        "*"
+      ]
+    }
+  }
+}
+```
+- **Ejemplo cURL**:
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@placetopay.com","password":"Password123*","device_name":"cli"}'
+```
+
+---
+
+### 6.2. Consultar Perfil y Permisos del Usuario Autenticado
+- **Método**: `GET`
+- **URI**: `/api/v1/auth/me`
+- **Acceso**: Protegido (`Authorization: Bearer <token>`)
+- **Cabeceras Obligatorias**:
+  - `Accept: application/json`
+  - `Authorization: Bearer <token>`
+- **Respuesta Exitosa (`200 OK`)**:
+```json
+{
+  "success": true,
+  "message": "Información del usuario autenticado obtenida exitosamente.",
+  "data": {
+    "id": 1,
+    "identification": 10000001,
+    "name": "Admin",
+    "last_name": "PlaceToPay",
+    "email": "admin@placetopay.com",
+    "phone": "3001234567",
+    "direction": "Calle 10 # 20-30",
+    "is_active": true,
+    "role": "admin",
+    "roles": {
+      "admin": "Administrador General"
+    },
+    "permissions": [
+      "*"
+    ],
+    "token_abilities": [
+      "*"
+    ]
+  }
+}
+```
+- **Ejemplo cURL**:
+```bash
+curl -X GET http://localhost:8000/api/v1/auth/me \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer <tu_token_aqui>"
+```
+
+---
+
+### 6.3. Cerrar Sesión y Revocar Token
+- **Método**: `POST`
+- **URI**: `/api/v1/auth/logout`
+- **Acceso**: Protegido (`Authorization: Bearer <token>`)
+- **Cabeceras Obligatorias**:
+  - `Accept: application/json`
+  - `Authorization: Bearer <token>`
+- **Respuesta Exitosa (`200 OK`)**:
+```json
+{
+  "success": true,
+  "message": "Sesión cerrada y token revocado exitosamente.",
+  "data": null
+}
+```
+- **Ejemplo cURL**:
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/logout \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer <tu_token_aqui>"
+```
+
+---
+
+## 7. Módulo de Categorías
 
 Ruta base: `/api/v1/categories`
 
-### 5.1. Listar Categorías
+### 7.1. Listar Categorías (Público)
 - **Método**: `GET`
 - **URI**: `/api/v1/categories`
+- **Acceso**: Público (Sin autenticación requerida)
 - **Query Parameters**:
   - `search` *(string, opcional)*: Búsqueda parcial por nombre.
   - `is_active` *(boolean: true/false/1/0, opcional)*: Filtra por estado activo o inactivo.
@@ -474,10 +608,14 @@ Ruta base: `/api/v1/categories`
 }
 ```
 
-### 5.2. Crear Categoría
+### 7.2. Crear Categoría (Protegido - Permiso: `categories.create`)
 - **Método**: `POST`
 - **URI**: `/api/v1/categories`
-- **Cabeceras**: `Content-Type: application/json`
+- **Acceso**: Protegido (`Authorization: Bearer <token>`)
+- **Cabeceras**:
+  - `Accept: application/json`
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <token>`
 - **Cuerpo de la Petición**:
 ```json
 {
@@ -504,9 +642,10 @@ Ruta base: `/api/v1/categories`
 }
 ```
 
-### 5.3. Ver Detalle de Categoría
+### 7.3. Ver Detalle de Categoría (Público)
 - **Método**: `GET`
 - **URI**: `/api/v1/categories/{id}`
+- **Acceso**: Público
 - **Respuesta `200 OK`**:
 ```json
 {
@@ -524,9 +663,11 @@ Ruta base: `/api/v1/categories`
 }
 ```
 
-### 5.4. Actualización Completa (`PUT`)
+### 7.4. Actualización Completa (`PUT` - Protegido - Permiso: `categories.edit`)
 - **Método**: `PUT`
 - **URI**: `/api/v1/categories/{id}`
+- **Acceso**: Protegido (`Authorization: Bearer <token>`)
+- **Cabeceras**: `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <token>`
 - **Cuerpo**: Requiere todos los campos obligatorios.
 ```json
 {
@@ -537,9 +678,11 @@ Ruta base: `/api/v1/categories`
 ```
 - **Respuesta `200 OK`**: Retorna el recurso actualizado.
 
-### 5.5. Actualización Parcial (`PATCH`)
+### 7.5. Actualización Parcial (`PATCH` - Protegido - Permiso: `categories.edit`)
 - **Método**: `PATCH`
 - **URI**: `/api/v1/categories/{id}`
+- **Acceso**: Protegido (`Authorization: Bearer <token>`)
+- **Cabeceras**: `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <token>`
 - **Cuerpo**: Permite enviar únicamente los campos que se desean modificar.
 ```json
 {
@@ -548,9 +691,11 @@ Ruta base: `/api/v1/categories`
 ```
 - **Respuesta `200 OK`**: Retorna el recurso con el cambio aplicado.
 
-### 5.6. Eliminar Categoría
+### 7.6. Eliminar Categoría (Protegido - Permiso: `categories.edit`)
 - **Método**: `DELETE`
 - **URI**: `/api/v1/categories/{id}`
+- **Acceso**: Protegido (`Authorization: Bearer <token>`)
+- **Cabeceras**: `Accept: application/json`, `Authorization: Bearer <token>`
 - **Comportamiento Seguro de Integridad**:
   - Si la categoría **no** tiene productos vinculados: Retorna `204 No Content`.
   - Si la categoría **tiene** productos vinculados y no se envía forzado: Retorna `409 Conflict`:
@@ -562,19 +707,21 @@ Ruta base: `/api/v1/categories`
     ```
   - Si se añade `?force=true` (`DELETE /api/v1/categories/{id}?force=true`): Desvincula automáticamente los productos (`category_id = null`), elimina la categoría y retorna `204 No Content`.
 
-### 5.7. Listar Productos de una Categoría (Sub-recurso)
+### 7.7. Listar Productos de una Categoría (Sub-recurso - Público)
 - **Método**: `GET`
 - **URI**: `/api/v1/categories/{id}/products`
+- **Acceso**: Público
 - **Query Parameters**: Soporta los mismos filtros y paginación del catálogo de productos.
 - **Respuesta `200 OK`**: Lista paginada de productos pertenecientes a la categoría.
 
 ---
 
-## 7. Módulo de Productos
+## 8. Módulo de Productos
 
 Ruta base: `/api/v1/products`
 
-### 6.1. Listar Productos con Búsqueda, Filtros y Ordenamiento
+### 8.1. Listar Productos con Búsqueda, Filtros y Ordenamiento (Público)
+- **Acceso**: Público (Catálogo comercial abierto)
 - **Método**: `GET`
 - **URI**: `/api/v1/products`
 - **Query Parameters**:
@@ -637,9 +784,13 @@ Ruta base: `/api/v1/products`
 }
 ```
 
-### 6.2. Crear Producto
+### 8.2. Crear Producto (Protegido - Permiso: `products.create`)
 - **Método**: `POST`
 - **URI**: `/api/v1/products`
+- **Acceso**: Protegido (`Authorization: Bearer <token>`)
+- **Cabeceras**:
+  - `Accept: application/json`
+  - `Authorization: Bearer <token>`
 - **Formatos admitidos**: `application/json` o `multipart/form-data` (para adjuntar archivo de imagen).
 - **Parámetros**:
   - `name` *(string, requerido, máx 100)*
@@ -677,27 +828,34 @@ Ruta base: `/api/v1/products`
 }
 ```
 
-### 6.3. Ver Detalle de Producto
+### 8.3. Ver Detalle de Producto (Público)
 - **Método**: `GET`
 - **URI**: `/api/v1/products/{id}`
+- **Acceso**: Público
 - **Respuesta `200 OK`**: Retorna el recurso completo con la categoría vinculada.
 
-### 6.4. Actualización Completa (`PUT`)
+### 8.4. Actualización Completa (`PUT` - Protegido - Permiso: `products.edit`)
 - **Método**: `PUT`
 - **URI**: `/api/v1/products/{id}`
+- **Acceso**: Protegido (`Authorization: Bearer <token>`)
+- **Cabeceras**: `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <token>`
 - **Cuerpo**: Requiere todos los campos obligatorios del producto.
 - **Respuesta `200 OK`**: Producto actualizado.
 
-### 6.5. Actualización Parcial (`PATCH`)
+### 8.5. Actualización Parcial (`PATCH` - Protegido - Permiso: `products.edit`)
 - **Método**: `PATCH`
 - **URI**: `/api/v1/products/{id}`
+- **Acceso**: Protegido (`Authorization: Bearer <token>`)
+- **Cabeceras**: `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <token>`
 - **Cuerpo**: Solo los campos a cambiar (e.g. `price`, `description`, `is_active`).
 - **Respuesta `200 OK`**: Producto actualizado.
 
-### 6.6. Ajuste Rápido de Stock (`PATCH /products/{id}/stock`)
+### 8.6. Ajuste Rápido de Stock (`PATCH /products/{id}/stock` - Protegido - Permiso: `products.edit`)
 Endpoint especializado para operaciones de almacén, logística o sincronización de inventario.
 - **Método**: `PATCH`
 - **URI**: `/api/v1/products/{id}/stock`
+- **Acceso**: Protegido (`Authorization: Bearer <token>`)
+- **Cabeceras**: `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <token>`
 - **Modos de uso admitidos**:
   1. **Valor absoluto**:
      ```json
@@ -731,15 +889,20 @@ Endpoint especializado para operaciones de almacén, logística o sincronizació
 }
 ```
 
-### 6.7. Eliminar Producto
+### 8.7. Eliminar Producto (Protegido - Permiso: `products.edit`)
 - **Método**: `DELETE`
 - **URI**: `/api/v1/products/{id}`
+- **Acceso**: Protegido (`Authorization: Bearer <token>`)
+- **Cabeceras**: `Accept: application/json`, `Authorization: Bearer <token>`
 - Elimina el producto y su archivo de imagen asociado si existía.
 - **Respuesta**: `204 No Content`.
 
 ---
 
-## 8. Módulo de Reportes y Analítica
+## 9. Módulo de Reportes y Analítica
+
+Ruta base: `/api/v1/reports`
+> **Seguridad**: Todo el módulo de reportes y métricas está completamente protegido mediante `auth:sanctum`. Cada petición debe incluir `Authorization: Bearer <token>`.
 
 Ruta base: `/api/v1/reports`
 
@@ -890,20 +1053,25 @@ El módulo de reportes combina **métricas en tiempo real** para dashboards inst
 
 ---
 
-## 9. Importación y Exportación Masiva de Productos
+## 10. Importación y Exportación Masiva de Productos
 
 Reutiliza el motor de procesamiento en streaming con **FastExcel**.
+> **Seguridad**: Requiere `Authorization: Bearer <token>` con permisos específicos de importación/exportación.
 
-### 9.1. Exportación de Catálogo
+### 10.1. Exportación de Catálogo (Protegido - Permiso: `products.export`)
 - **Método**: `GET`
 - **URI**: `/api/v1/products/export`
+- **Acceso**: Protegido (`Authorization: Bearer <token>`)
+- **Cabeceras**: `Accept: application/json`, `Authorization: Bearer <token>`
 - **Query Parameters**:
   - `format` *(string, opcional)*: `xlsx` (por defecto) o `csv`.
 - **Respuesta `200 OK`**: Descarga directa del archivo con columnas: `id`, `name`, `category`, `price`, `stock`, `is_active`, `description`.
 
-### 9.2. Importación Masiva
+### 10.2. Importación Masiva (Protegido - Permiso: `products.import`)
 - **Método**: `POST`
 - **URI**: `/api/v1/products/import`
+- **Acceso**: Protegido (`Authorization: Bearer <token>`)
+- **Cabeceras**: `Accept: application/json`, `Authorization: Bearer <token>`
 - **Formato**: `multipart/form-data`
 - **Parámetro**: `file` (archivo `.xlsx` o `.csv` obligatorio).
 - **Lógica de negocio**:
@@ -926,20 +1094,36 @@ Reutiliza el motor de procesamiento en streaming con **FastExcel**.
 
 ---
 
-## 10. Pruebas Automatizadas en Postman
+## 11. Pruebas Automatizadas en Postman
 
-### 9.1. Variables Recomendadas en Postman Environment
+### 11.1. Variables Recomendadas en Postman Environment
 - `base_url`: `http://localhost:8000/api/v1`
+- `bearer_token`: Token obtenido tras login en `/api/v1/auth/login` (se asigna automáticamente en Tests script: `pm.environment.set("bearer_token", pm.response.json().data.token);`)
 
-### 9.2. Ejemplos Rápidos con cURL
+### 11.2. Ejemplos Rápidos con cURL
 
-#### Listar Productos Paginados
+#### Iniciar Sesión y Capturar Token
+```bash
+curl -X POST "http://localhost:8000/api/v1/auth/login" \
+     -H "Accept: application/json" \
+     -H "Content-Type: application/json" \
+     -d '{"email":"admin@placetopay.com","password":"tu_password"}'
+```
+
+#### Listar Productos Paginados (Público)
 ```bash
 curl -X GET "http://localhost:8000/api/v1/products?per_page=10&in_stock=1" \
      -H "Accept: application/json"
 ```
 
-#### Crear un Producto
+#### Crear un Producto (Protegido con Bearer Token)
+```bash
+curl -X POST "http://localhost:8000/api/v1/products" \
+     -H "Accept: application/json" \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer <tu_token>" \
+     -d '{"name":"Nuevo Producto","price":25000,"stock":10,"category_id":1}'
+```
 ```bash
 curl -X POST "http://localhost:8000/api/v1/products" \
      -H "Accept: application/json" \

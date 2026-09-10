@@ -29,5 +29,7 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="PLACETOPAY_LOGIN" value="test_login"/>
+        <env name="PLACETOPAY_TRAN_KEY" value="test_tran_key_12345"/>
     </php>
 </phpunit>

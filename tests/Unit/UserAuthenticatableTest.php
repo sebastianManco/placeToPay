@@ -44,13 +44,13 @@ class UserAuthenticatableTest extends TestCase
         ]);
 
         $this->assertSame('users', $user->getTable());
-        $this->assertSame('identification', $user->getKeyName());
-        $this->assertFalse($user->getIncrementing());
+        $this->assertSame('id', $user->getKeyName());
+        $this->assertTrue($user->getIncrementing());
         $this->assertSame('int', $user->getKeyType());
 
         // Authenticatable interface methods
-        $this->assertSame('identification', $user->getAuthIdentifierName());
-        $this->assertEquals(12345678, $user->getAuthIdentifier());
+        $this->assertSame('id', $user->getAuthIdentifierName());
+        $this->assertEquals(12345678, $user->identification);
         $this->assertSame('password', $user->getAuthPasswordName());
         $this->assertSame('remember_token', $user->getRememberTokenName());
     }

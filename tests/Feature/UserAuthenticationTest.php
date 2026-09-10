@@ -23,11 +23,13 @@ class UserAuthenticationTest extends TestCase
             'user_Name' => 'janedoe',
             'password' => 'password123',
         ]);
+        $user->id = 1;
 
         Auth::login($user);
 
         $this->assertTrue(Auth::check());
-        $this->assertEquals($user->identification, Auth::id());
+        $this->assertEquals($user->id, Auth::id());
+        $this->assertEquals(98765432, $user->identification);
         $this->assertEquals('Jane', Auth::user()->name);
 
         Auth::logout();

@@ -4,9 +4,11 @@ namespace Tests\Feature\Api\V1;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class ProductApiTest extends TestCase
@@ -14,7 +16,47 @@ class ProductApiTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Test listing products with pagination.
+     * Helper to create an admin user for testing.
+     */
+    protected function createAdminUser(): User
+    {
+        return User::create([
+            'identification' => 60000001,
+            'name' => 'Admin',
+            'last_Name' => 'Tester',
+            'email' => 'admin.product@test.com',
+            'phone' => '3001234567',
+            'direction' => 'Admin Avenue',
+            'user_name' => 'adminproduct',
+            'password' => 'secret123',
+            'email_verified_at' => now(),
+            'is_active' => true,
+            'role' => 'admin',
+        ]);
+    }
+
+    /**
+     * Helper to create a regular client user without permissions.
+     */
+    protected function createClientUser(): User
+    {
+        return User::create([
+            'identification' => 60000002,
+            'name' => 'Client',
+            'last_Name' => 'Tester',
+            'email' => 'client.product@test.com',
+            'phone' => '3009876543',
+            'direction' => 'Client Street',
+            'user_name' => 'clientproduct',
+            'password' => 'secret123',
+            'email_verified_at' => now(),
+            'is_active' => true,
+            'role' => 'client',
+        ]);
+    }
+
+    /**
+     * Test listing products with pagination (Public Endpoint).
      */
     public function test_can_list_products_with_pagination(): void
     {
@@ -61,7 +103,7 @@ class ProductApiTest extends TestCase
     }
 
     /**
-     * Test filtering products by category and stock.
+     * Test filtering products by category and stock (Public Endpoint).
      */
     public function test_can_filter_products_by_category_and_stock(): void
     {
@@ -87,7 +129,7 @@ class ProductApiTest extends TestCase
     }
 
     /**
-     * Test filtering by price range and searching.
+     * Test filtering by price range and searching (Public Endpoint).
      */
     public function test_can_filter_by_price_and_search(): void
     {
@@ -112,7 +154,7 @@ class ProductApiTest extends TestCase
     }
 
     /**
-     * Test sorting products.
+     * Test sorting products (Public Endpoint).
      */
     public function test_can_sort_products(): void
     {
@@ -129,7 +171,7 @@ class ProductApiTest extends TestCase
     }
 
     /**
-     * Test retrieving a single product.
+     * Test retrieving a single product (Public Endpoint).
      */
     public function test_can_show_product(): void
     {
@@ -171,10 +213,46 @@ class ProductApiTest extends TestCase
     }
 
     /**
-     * Test creating a product without image returns 201 Created with Location header.
+     * Test unauthenticated request to create product returns 401.
+     */
+    public function test_unauthenticated_user_cannot_create_product(): void
+    {
+        $response = $this->postJson(route('api.v1.products.store'), [
+            'name' => 'Intento No Autorizado',
+        ]);
+
+        $response->assertUnauthorized();
+    }
+
+    /**
+     * Test client without permissions cannot create product and gets 403 Forbidden.
+     */
+    public function test_client_without_permission_cannot_create_product(): void
+    {
+        $client = $this->createClientUser();
+        Sanctum::actingAs($client, ['*']);
+
+        $category = Category::factory()->create();
+
+        $response = $this->postJson(route('api.v1.products.store'), [
+            'name' => 'Nuevo Producto Bloqueado',
+            'description' => 'Test',
+            'price' => 10000,
+            'stock' => 5,
+            'category_id' => $category->id,
+        ]);
+
+        $response->assertForbidden();
+    }
+
+    /**
+     * Test creating a product with authentication returns 201 Created.
      */
     public function test_can_create_product(): void
     {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         $category = Category::factory()->create();
 
         $payload = [
@@ -211,6 +289,9 @@ class ProductApiTest extends TestCase
      */
     public function test_can_create_product_with_image(): void
     {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         Storage::fake('public');
 
         $file = UploadedFile::fake()->create('monitor.jpg', 100, 'image/jpeg');
@@ -241,6 +322,9 @@ class ProductApiTest extends TestCase
      */
     public function test_cannot_create_product_with_invalid_data(): void
     {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         $response = $this->postJson(route('api.v1.products.store'), [
             'name' => '',
             'price' => -100,
@@ -261,6 +345,9 @@ class ProductApiTest extends TestCase
      */
     public function test_can_update_product_via_put(): void
     {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         $category = Category::factory()->create();
         $product = Product::factory()->create(['category_id' => $category->id]);
 
@@ -299,6 +386,9 @@ class ProductApiTest extends TestCase
      */
     public function test_can_update_product_via_patch(): void
     {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         $product = Product::factory()->create([
             'name' => 'Nombre Original',
             'price' => 100000,
@@ -332,6 +422,9 @@ class ProductApiTest extends TestCase
      */
     public function test_can_update_stock_with_absolute_value(): void
     {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         $product = Product::factory()->create(['stock' => 10]);
 
         $response = $this->patchJson(route('api.v1.products.stock', $product), [
@@ -355,6 +448,9 @@ class ProductApiTest extends TestCase
      */
     public function test_can_update_stock_with_relative_adjustment(): void
     {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         $product = Product::factory()->create(['stock' => 20]);
 
         // Add 15
@@ -377,6 +473,9 @@ class ProductApiTest extends TestCase
      */
     public function test_cannot_adjust_stock_to_negative(): void
     {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         $product = Product::factory()->create(['stock' => 5]);
 
         $response = $this->patchJson(route('api.v1.products.stock', $product), [
@@ -396,6 +495,9 @@ class ProductApiTest extends TestCase
      */
     public function test_can_delete_product(): void
     {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         $product = Product::factory()->create();
 
         $response = $this->deleteJson(route('api.v1.products.destroy', $product));
@@ -405,10 +507,23 @@ class ProductApiTest extends TestCase
     }
 
     /**
-     * Test exporting products to spreadsheet (.xlsx or .csv).
+     * Test exporting products to spreadsheet (.xlsx or .csv) requires authentication.
      */
-    public function test_can_export_products(): void
+    public function test_unauthenticated_user_cannot_export_products(): void
     {
+        $response = $this->get(route('api.v1.products.export', ['format' => 'csv']), ['Accept' => 'application/json']);
+
+        $response->assertUnauthorized();
+    }
+
+    /**
+     * Test exporting products to spreadsheet (.xlsx or .csv) when authenticated.
+     */
+    public function test_can_export_products_when_authenticated(): void
+    {
+        $admin = $this->createAdminUser();
+        Sanctum::actingAs($admin, ['*']);
+
         Product::factory()->count(3)->create();
 
         $response = $this->get(route('api.v1.products.export', ['format' => 'csv']));

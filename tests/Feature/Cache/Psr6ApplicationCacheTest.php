@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\Cache\CacheVersionManager;
 use App\Services\Cache\Psr6CachePool;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Psr\Cache\CacheItemPoolInterface;
 use Tests\TestCase;
 
@@ -123,7 +124,22 @@ class Psr6ApplicationCacheTest extends TestCase
         $this->assertEquals(15, $response1->json('data.stock'));
         $this->assertTrue($this->pool->hasItem("product_{$product->id}"));
 
-        // Adjust stock via API
+        // Adjust stock via API (protected route requiring Sanctum & permissions)
+        $admin = User::create([
+            'identification' => 88000001,
+            'name' => 'Admin',
+            'last_Name' => 'Cache',
+            'email' => 'admin.cache@test.com',
+            'phone' => '3001234567',
+            'direction' => 'Calle 100',
+            'user_name' => 'admincache',
+            'password' => 'secret123',
+            'email_verified_at' => now(),
+            'is_active' => true,
+            'role' => 'admin',
+        ]);
+        Sanctum::actingAs($admin, ['*']);
+
         $responseStock = $this->patchJson(route('api.v1.products.stock', ['product' => $product->id]), [
             'stock' => 25,
         ]);
