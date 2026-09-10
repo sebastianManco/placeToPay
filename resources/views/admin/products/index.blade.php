@@ -18,6 +18,19 @@
         </div>
     </div>
 
+    @if (isset($latestImport) && ($latestImport->isPending() || $latestImport->isProcessing()))
+        <div class="alert alert-info alert-dismissible fade show d-flex align-items-center justify-content-between" role="alert">
+            <div>
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <strong>{{ __('Importación en segundo plano') }} (ID #{{ $latestImport->id }}):</strong>
+                <span>{{ $latestImport->file_name }} &bull; {{ __('Estado:') }} <span class="badge bg-primary">{{ ucfirst($latestImport->status) }}</span> &bull; {{ __('Filas procesadas:') }} {{ $latestImport->processed_rows }}/{{ $latestImport->total_rows }}</span>
+            </div>
+            <button type="button" class="close" data-dismiss="alert" data-bs-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
