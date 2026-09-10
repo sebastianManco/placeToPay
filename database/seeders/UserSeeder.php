@@ -56,10 +56,15 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($users as $userData) {
-            User::updateOrCreate(
+            $roleSlug = $userData['role'] ?? 'client';
+            unset($userData['role']);
+
+            $user = User::updateOrCreate(
                 ['identification' => $userData['identification']],
                 $userData
             );
+
+            $user->assignRole($roleSlug);
         }
     }
 }

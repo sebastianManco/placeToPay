@@ -20,7 +20,9 @@ class ClientController extends Controller
         $search = $request->query('search');
         $status = $request->query('status');
 
-        $query = User::query()->where('role', 'client');
+        $query = User::query()->whereDoesntHave('roles', function ($q) {
+            $q->where('slug', 'admin');
+        });
 
         if (! empty($search)) {
             $query->where(function ($q) use ($search) {
@@ -47,7 +49,7 @@ class ClientController extends Controller
      */
     public function edit(User $client): View
     {
-        abort_if($client->role !== 'client', 404);
+        abort_if($client->isAdmin(), 404);
 
         $client->load('roles');
         $roles = Role::orderBy('name')->get();
@@ -61,7 +63,7 @@ class ClientController extends Controller
      */
     public function update(UpdateClientRequest $request, User $client): RedirectResponse
     {
-        abort_if($client->role !== 'client', 404);
+        abort_if($client->isAdmin(), 404);
 
         $validated = $request->validated();
 

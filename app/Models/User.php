@@ -67,14 +67,59 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Temporary storage for role assignment during model creation/save.
+     */
+    protected ?string $transientRole = null;
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (User $user) {
+            if ($user->transientRole !== null) {
+                $roleToSync = $user->transientRole;
+                $user->transientRole = null;
+                $user->syncRoles([$roleToSync]);
+            } elseif ($user->roles()->count() === 0) {
+                $user->assignRole('client');
+            }
+        });
+    }
+
+    /**
+     * Accessor for legacy role attribute.
+     * Returns the primary ACL role slug for backward compatibility.
+     *
+     * @deprecated Use $user->roles or $user->hasRole() instead.
+     */
+    public function getRoleAttribute(): ?string
+    {
+        return $this->roles->first()?->slug ?? 'client';
+    }
+
+    /**
+     * Mutator for legacy role attribute.
+     * Assigns the role through the ACL pivot relation.
+     *
+     * @deprecated Use $user->assignRole() or $user->syncRoles() instead.
+     */
+    public function setRoleAttribute(?string $value): void
+    {
+        if ($this->exists) {
+            if ($value) {
+                $this->syncRoles([$value]);
+            }
+        } else {
+            $this->transientRole = $value;
+        }
+    }
+
+    /**
      * Check if the user is an administrator.
      */
     public function isAdmin(): bool
     {
-        if (($this->attributes['role'] ?? null) === 'admin') {
-            return true;
-        }
-
         return $this->hasRole('admin');
     }
 
