@@ -245,4 +245,81 @@ class CartServiceTest extends TestCase
             'customer_email' => 'comprador@example.com',
         ]);
     }
+
+    /**
+     * Test confirming order without user identification throws exception.
+     */
+    public function test_confirm_order_without_user_identification_throws_exception(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Debe identificarse para confirmar la compra.');
+
+        $product = $this->createProduct(['price' => 10000.00]);
+        // Create cart as guest (sessionId only, no user)
+        $cart = $this->cartService->getCart(null, 'guest-session-test-id');
+        $this->cartService->addItem($cart, $product, 1);
+
+        $this->cartService->confirmOrder($cart, [
+            'customer_name' => 'Invitado',
+            'customer_email' => 'invitado@example.com',
+        ]);
+    }
+
+    /**
+     * Test migrating guest cart assigns cart to user when user has no active cart.
+     */
+    public function test_migrate_guest_cart_assigns_cart_to_user_without_cart(): void
+    {
+        $user = $this->createUser();
+        $product = $this->createProduct(['price' => 20000.00, 'stock' => 10]);
+
+        $guestCart = $this->cartService->getCart(null, 'guest-session-111');
+        $this->cartService->addItem($guestCart, $product, 2);
+
+        $this->assertNull($guestCart->user_identification);
+
+        $migrated = $this->cartService->migrateGuestCart($user, 'guest-session-111', 'new-session-222');
+
+        $this->assertNotNull($migrated);
+        $this->assertEquals($user->identification, $migrated->user_identification);
+        $this->assertEquals('new-session-222', $migrated->session_id);
+        $this->assertCount(1, $migrated->items);
+        $this->assertEquals(40000.00, (float) $migrated->total_amount);
+    }
+
+    /**
+     * Test migrating guest cart merges items when user already has an active cart.
+     */
+    public function test_migrate_guest_cart_merges_items_into_user_existing_cart(): void
+    {
+        $user = $this->createUser();
+        $prodA = $this->createProduct(['name' => 'Prod A', 'price' => 10000.00, 'stock' => 10]);
+        $prodB = $this->createProduct(['name' => 'Prod B', 'price' => 15000.00, 'stock' => 10]);
+
+        // User's existing cart has Prod A x 1
+        $userCart = $this->cartService->getCart($user);
+        $this->cartService->addItem($userCart, $prodA, 1);
+
+        // Guest cart has Prod A x 2 and Prod B x 1
+        $guestCart = $this->cartService->getCart(null, 'guest-sess-abc');
+        $this->cartService->addItem($guestCart, $prodA, 2);
+        $this->cartService->addItem($guestCart, $prodB, 1);
+
+        $result = $this->cartService->migrateGuestCart($user, 'guest-sess-abc', 'new-sess-xyz');
+
+        $this->assertNotNull($result);
+        $this->assertEquals($user->identification, $result->user_identification);
+        $this->assertEquals(2, $result->items()->count());
+
+        $itemA = $result->items()->where('product_id', $prodA->id)->first();
+        $this->assertNotNull($itemA);
+        $this->assertEquals(3, $itemA->quantity); // 1 + 2
+
+        $itemB = $result->items()->where('product_id', $prodB->id)->first();
+        $this->assertNotNull($itemB);
+        $this->assertEquals(1, $itemB->quantity);
+
+        // Guest order record should be deleted
+        $this->assertDatabaseMissing('orders', ['id' => $guestCart->id]);
+    }
 }
