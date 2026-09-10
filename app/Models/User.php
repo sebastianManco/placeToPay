@@ -27,6 +27,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $fillable = [
         'name',
+        'last_name',
         'last_Name', 
         'email', 
         'phone', 
@@ -90,7 +91,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getDirectionAttribute(): ?string
     {
-        return $this->attributes['Direction'] ?? $this->attributes['direction'] ?? null;
+        return $this->attributes['direction'] ?? $this->attributes['Direction'] ?? null;
     }
 
     /**
@@ -98,7 +99,39 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function setDirectionAttribute(?string $value): void
     {
-        $this->attributes['Direction'] = $value;
+        $this->attributes['direction'] = $value;
+    }
+
+    /**
+     * Get the user last name.
+     */
+    public function getLastNameAttribute(): ?string
+    {
+        return $this->attributes['last_name'] ?? $this->attributes['last_Name'] ?? null;
+    }
+
+    /**
+     * Set the user last name.
+     */
+    public function setLastNameAttribute(?string $value): void
+    {
+        $this->attributes['last_name'] = $value;
+    }
+
+    /**
+     * Get the user username.
+     */
+    public function getUserNameAttribute(): ?string
+    {
+        return $this->attributes['user_name'] ?? $this->attributes['user_Name'] ?? null;
+    }
+
+    /**
+     * Set the user username.
+     */
+    public function setUserNameAttribute(?string $value): void
+    {
+        $this->attributes['user_name'] = $value;
     }
 
     /**

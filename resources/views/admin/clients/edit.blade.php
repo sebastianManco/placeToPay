@@ -5,7 +5,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2>{{ __('Editar Cliente') }}</h2>
-            <p class="text-muted mb-0">{{ __('Modifique los datos del cliente ') }} <strong>{{ $client->name }} {{ $client->last_Name }}</strong></p>
+            <p class="text-muted mb-0">{{ __('Modifique los datos del cliente ') }} <strong>{{ $client->name }} {{ $client->last_name }}</strong></p>
         </div>
         <a href="{{ route('admin.clients.index') }}" class="btn btn-outline-secondary">
             &larr; {{ __('Volver al listado') }}
@@ -70,17 +70,19 @@
 
                     <!-- Apellidos -->
                     <div class="col-md-6">
-                        <label for="last_Name" class="form-label">{{ __('Apellidos') }} <span class="text-danger">*</span></label>
+                        <label for="last_name" class="form-label">{{ __('Apellidos') }} <span class="text-danger">*</span></label>
                         <input type="text"
-                               id="last_Name"
-                               name="last_Name"
-                               class="form-control @error('last_Name') is-invalid @enderror"
-                               value="{{ old('last_Name', $client->last_Name) }}"
+                               id="last_name"
+                               name="last_name"
+                               class="form-control @if($errors->has('last_name') || $errors->has('last_Name')) is-invalid @endif"
+                               value="{{ old('last_name', old('last_Name', $client->last_name)) }}"
                                required
                                maxlength="50">
-                        @error('last_Name')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        @if($errors->has('last_name'))
+                            <div class="invalid-feedback">{{ $errors->first('last_name') }}</div>
+                        @elseif($errors->has('last_Name'))
+                            <div class="invalid-feedback">{{ $errors->first('last_Name') }}</div>
+                        @endif
                     </div>
 
                     <!-- Email -->

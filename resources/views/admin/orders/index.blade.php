@@ -152,7 +152,7 @@
                                         <div class="small text-muted font-weight-normal">ID: {{ $order->id }}</div>
                                     </td>
                                     <td class="align-middle">
-                                        <strong>{{ $order->customer_name ?: ($order->user ? $order->user->name . ' ' . $order->user->last_Name : __('Sin nombre')) }}</strong>
+                                        <strong>{{ $order->customer_name ?: ($order->user ? $order->user->name . ' ' . $order->user->last_name : __('Sin nombre')) }}</strong>
                                         <div class="small text-muted">{{ $order->customer_email ?: ($order->user ? $order->user->email : '-') }}</div>
                                         @if ($order->user_identification)
                                             <div class="small text-secondary">CC: {{ $order->user_identification }}</div>

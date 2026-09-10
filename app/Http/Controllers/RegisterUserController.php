@@ -29,11 +29,11 @@ class RegisterUserController extends Controller
         $user = User::create([
             'identification' => $validated['identification'],
             'name' => $validated['name'],
-            'last_Name' => $validated['lastName'],
+            'last_name' => $validated['lastName'],
             'email' => $validated['email'],
             'phone' => $validated['phone'],
             'direction' => $validated['direction'],
-            'user_Name' => $validated['userName'],
+            'user_name' => $validated['userName'],
             'password' => $validated['password'],
         ]);
 
