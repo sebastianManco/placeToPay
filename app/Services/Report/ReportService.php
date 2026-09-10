@@ -343,7 +343,7 @@ class ReportService implements ReportServiceInterface
 
         $pdf = Pdf::loadView('admin.reports.pdf', $data)
             ->setPaper('a4', 'portrait')
-            ->setOption(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true]);
+            ->setOption(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => false]);
 
         Storage::disk('local')->put($storagePath, $pdf->output());
 

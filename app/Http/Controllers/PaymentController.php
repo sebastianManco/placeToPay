@@ -154,6 +154,16 @@ class PaymentController extends Controller
      */
     public function webhook(Request $request): JsonResponse
     {
+        // Validate authenticity and cryptographic HMAC signature before processing requestId
+        if (! $this->gateway->isValidWebhookNotification($request)) {
+            Log::warning('Notificación de webhook PlaceToPay rechazada: Firma o autenticidad inválida.');
+
+            return response()->json([
+                'status' => 'FAILED',
+                'message' => 'Firma o autenticidad de la notificación inválida.',
+            ], 403);
+        }
+
         $requestId = $request->input('requestId') ?? $request->input('request_id');
 
         if (! $requestId) {
