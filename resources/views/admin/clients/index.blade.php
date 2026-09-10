@@ -59,7 +59,7 @@
                         @forelse ($clients as $client)
                             <tr>
                                 <td><strong>{{ $client->identification }}</strong></td>
-                                <td>{{ $client->name }} {{ $client->last_Name }}</td>
+                                <td>{{ $client->name }} {{ $client->last_name }}</td>
                                 <td>{{ $client->email }}</td>
                                 <td>{{ $client->phone ?? '-' }}</td>
                                 <td>

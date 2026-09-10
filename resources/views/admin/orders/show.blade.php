@@ -153,7 +153,7 @@
                 <div class="card-body">
                     <div class="mb-2">
                         <span class="text-muted small d-block">{{ __('Nombre:') }}</span>
-                        <strong>{{ $order->customer_name ?: ($order->user ? $order->user->name . ' ' . $order->user->last_Name : __('No especificado')) }}</strong>
+                        <strong>{{ $order->customer_name ?: ($order->user ? $order->user->name . ' ' . $order->user->last_name : __('No especificado')) }}</strong>
                     </div>
                     <div class="mb-2">
                         <span class="text-muted small d-block">{{ __('Correo electrónico:') }}</span>

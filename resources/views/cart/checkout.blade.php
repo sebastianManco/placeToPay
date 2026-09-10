@@ -114,7 +114,7 @@
 
                         @php
                             $user = Auth::user();
-                            $defaultName = $user ? $user->name . ' ' . $user->last_Name : '';
+                            $defaultName = $user ? $user->name . ' ' . $user->last_name : '';
                             $defaultEmail = $user ? $user->email : '';
                             $defaultPhone = $user ? $user->phone : '';
                             $defaultAddress = $user ? $user->direction : '';

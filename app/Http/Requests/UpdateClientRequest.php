@@ -21,9 +21,18 @@ class UpdateClientRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        if ($this->has('lastName') && ! $this->has('last_Name')) {
+        if ($this->has('lastName') && ! $this->has('last_name') && ! $this->has('last_Name')) {
             $this->merge([
+                'last_name' => $this->input('lastName'),
                 'last_Name' => $this->input('lastName'),
+            ]);
+        } elseif ($this->has('last_Name') && ! $this->has('last_name')) {
+            $this->merge([
+                'last_name' => $this->input('last_Name'),
+            ]);
+        } elseif ($this->has('last_name') && ! $this->has('last_Name')) {
+            $this->merge([
+                'last_Name' => $this->input('last_name'),
             ]);
         }
     }
@@ -41,7 +50,8 @@ class UpdateClientRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:50'],
-            'last_Name' => ['required', 'string', 'max:50'],
+            'last_name' => ['required_without:last_Name', 'nullable', 'string', 'max:50'],
+            'last_Name' => ['required_without:last_name', 'nullable', 'string', 'max:50'],
             'email' => [
                 'required',
                 'string',

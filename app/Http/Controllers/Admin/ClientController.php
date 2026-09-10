@@ -26,7 +26,7 @@ class ClientController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('identification', 'like', "%{$search}%")
                   ->orWhere('name', 'like', "%{$search}%")
-                  ->orWhere('last_Name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
             });
         }
@@ -67,7 +67,7 @@ class ClientController extends Controller
 
         $client->update([
             'name' => $validated['name'],
-            'last_Name' => $validated['last_Name'],
+            'last_name' => $validated['last_name'] ?? $validated['last_Name'] ?? $client->last_name,
             'email' => $validated['email'],
             'phone' => $validated['phone'],
             'direction' => $validated['direction'],
@@ -79,7 +79,7 @@ class ClientController extends Controller
         }
 
         return redirect()->route('admin.clients.index')
-            ->with('success', "El cliente {$client->name} {$client->last_Name} ha sido actualizado correctamente.");
+            ->with('success', "El cliente {$client->name} {$client->last_name} ha sido actualizado correctamente.");
     }
 
     /**
