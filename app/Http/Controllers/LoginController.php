@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
+use App\Services\CartService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +13,21 @@ use Illuminate\View\View;
 
 class LoginController extends Controller
 {
+    /**
+     * @var \App\Services\CartService
+     */
+    protected CartService $cartService;
+
+    /**
+     * LoginController constructor.
+     *
+     * @param  \App\Services\CartService  $cartService
+     */
+    public function __construct(CartService $cartService)
+    {
+        $this->cartService = $cartService;
+    }
+
     /**
      * Display the login form.
      */
@@ -68,8 +84,16 @@ class LoginController extends Controller
                 ->withInput($request->only('email'));
         }
 
+        $guestSessionId = (string) ($request->session()->get('guest_cart_session_id') ?? $request->session()->getId());
+        $previousSessionId = $request->session()->getId();
+
         RateLimiter::clear($throttleKey);
         $request->session()->regenerate();
+
+        $this->cartService->migrateGuestCart($user, $guestSessionId, $request->session()->getId());
+        if ($guestSessionId !== $previousSessionId) {
+            $this->cartService->migrateGuestCart($user, $previousSessionId, $request->session()->getId());
+        }
 
         return redirect()->intended(route('dashboard'));
     }

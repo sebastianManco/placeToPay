@@ -38,8 +38,6 @@ Route::post('/cart/items', [CartController::class, 'addItem'])->name('cart.items
 Route::put('/cart/items/{itemId}', [CartController::class, 'updateItem'])->name('cart.items.update');
 Route::delete('/cart/items/{itemId}', [CartController::class, 'removeItem'])->name('cart.items.destroy');
 Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
-Route::get('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
-Route::post('/cart/checkout/confirm', [CartController::class, 'confirm'])->name('cart.checkout.confirm');
 
 // PlaceToPay Payment Gateway Routes
 Route::post('/payment/notification', [PaymentController::class, 'webhook'])->name('payment.notification');
@@ -76,6 +74,10 @@ Route::middleware('auth')->group(function () {
     // Verified users routes
     Route::middleware('verified')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Customer checkout and order review routes
+        Route::get('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+        Route::post('/cart/checkout/confirm', [CartController::class, 'confirm'])->name('cart.checkout.confirm');
 
         // Customer orders routes
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
