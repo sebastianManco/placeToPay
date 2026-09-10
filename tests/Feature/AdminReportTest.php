@@ -18,19 +18,21 @@ class AdminReportTest extends TestCase
 
     protected function createAdmin(): User
     {
-        return User::create([
+        $user = User::create([
             'identification' => 80000001,
             'name' => 'Admin',
-            'last_Name' => 'Reporter',
+            'last_name' => 'Reporter',
             'email' => 'admin_reporter@test.com',
             'phone' => '123456789',
             'direction' => 'HQ Avenue',
-            'user_Name' => 'admin_rep',
+            'user_name' => 'admin_rep',
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'admin',
         ]);
+        $user->syncRoles(['admin']);
+
+        return $user;
     }
 
     protected function createClient(): User
@@ -38,11 +40,11 @@ class AdminReportTest extends TestCase
         return User::create([
             'identification' => 81000001,
             'name' => 'Cliente',
-            'last_Name' => 'Normal',
+            'last_name' => 'Normal',
             'email' => 'cliente_normal@test.com',
             'phone' => '987654321',
             'direction' => 'Street 10',
-            'user_Name' => 'client_rep',
+            'user_name' => 'client_rep',
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,

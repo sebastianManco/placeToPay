@@ -19,10 +19,13 @@ class AuthApiTest extends TestCase
      */
     protected function createTestUser(array $attributes = []): User
     {
-        return User::create(array_merge([
+        $role = $attributes['role'] ?? 'client';
+        unset($attributes['role']);
+
+        $user = User::create(array_merge([
             'identification' => 50000001,
             'name' => 'John',
-            'last_Name' => 'Doe',
+            'last_name' => 'Doe',
             'email' => 'johndoe@example.com',
             'phone' => '3001112233',
             'direction' => 'Calle 10 # 20-30',
@@ -30,8 +33,11 @@ class AuthApiTest extends TestCase
             'password' => Hash::make('Secret123*'),
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'client',
         ], $attributes));
+
+        $user->syncRoles([$role]);
+
+        return $user;
     }
 
     /**

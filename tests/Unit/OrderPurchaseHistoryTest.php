@@ -31,15 +31,14 @@ class OrderPurchaseHistoryTest extends TestCase
         return User::create(array_merge([
             'identification' => $id,
             'name' => "Cliente{$counter}",
-            'last_Name' => 'Prueba',
+            'last_name' => 'Prueba',
             'email' => "cliente_unit{$counter}@test.com",
             'phone' => '3001234567',
             'direction' => 'Carrera 10 # 20 - 30',
-            'user_Name' => "cliunit{$counter}",
+            'user_name' => "cliunit{$counter}",
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'client',
         ], $attributes));
     }
 
@@ -58,7 +57,7 @@ class OrderPurchaseHistoryTest extends TestCase
             'status' => Order::STATUS_PENDING_PAYMENT,
             'total_amount' => 50000.00,
             'currency' => 'COP',
-            'customer_name' => $user->name . ' ' . $user->last_Name,
+            'customer_name' => $user->name . ' ' . $user->last_name,
             'customer_email' => $user->email,
             'customer_phone' => $user->phone,
             'customer_address' => $user->direction,

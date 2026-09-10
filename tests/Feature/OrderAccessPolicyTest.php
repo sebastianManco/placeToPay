@@ -14,19 +14,25 @@ class OrderAccessPolicyTest extends TestCase
 
     protected function createAdmin(array $attributes = []): User
     {
-        return User::create(array_merge([
+        $role = $attributes['role'] ?? 'admin';
+        unset($attributes['role']);
+
+        $user = User::create(array_merge([
             'identification' => 50000001,
             'name' => 'Admin',
-            'last_Name' => 'User',
+            'last_name' => 'User',
             'email' => 'admin_orders@example.com',
             'phone' => '123456789',
             'direction' => 'HQ Street',
-            'user_Name' => 'adminorders',
+            'user_name' => 'adminorders',
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'admin',
         ], $attributes));
+
+        $user->syncRoles([$role]);
+
+        return $user;
     }
 
     protected function createClient(array $attributes = []): User
@@ -37,11 +43,11 @@ class OrderAccessPolicyTest extends TestCase
         return User::create(array_merge([
             'identification' => $id,
             'name' => "Client{$counter}",
-            'last_Name' => 'Tester',
+            'last_name' => 'Tester',
             'email' => "client{$counter}_orders@example.com",
             'phone' => '3001112233',
             'direction' => 'Avenue 45 # 10',
-            'user_Name' => "clientord{$counter}",
+            'user_name' => "clientord{$counter}",
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
@@ -57,7 +63,7 @@ class OrderAccessPolicyTest extends TestCase
             'status' => Order::STATUS_PENDING_PAYMENT,
             'total_amount' => 50000.00,
             'currency' => 'COP',
-            'customer_name' => $user->name . ' ' . $user->last_Name,
+            'customer_name' => $user->name . ' ' . $user->last_name,
             'customer_email' => $user->email,
             'customer_phone' => $user->phone,
             'customer_address' => $user->direction,

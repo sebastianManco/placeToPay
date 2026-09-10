@@ -29,19 +29,25 @@ class ImportProductsJobTest extends TestCase
      */
     protected function createAdmin(array $attributes = []): User
     {
-        return User::create(array_merge([
+        $role = $attributes['role'] ?? 'admin';
+        unset($attributes['role']);
+
+        $user = User::create(array_merge([
             'identification' => 70000002,
             'name' => 'Admin Job Tester',
-            'last_Name' => 'Admin',
+            'last_name' => 'Admin',
             'email' => 'admin_job@example.com',
             'phone' => '123456789',
             'direction' => 'HQ Ave',
-            'user_Name' => 'admin_job_user',
+            'user_name' => 'admin_job_user',
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'admin',
         ], $attributes));
+
+        $user->syncRoles([$role]);
+
+        return $user;
     }
 
     /**

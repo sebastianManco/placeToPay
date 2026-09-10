@@ -19,11 +19,11 @@ class CartControllerTest extends TestCase
         return User::create(array_merge([
             'identification' => 12345678,
             'name' => 'Cliente',
-            'last_Name' => 'Prueba',
+            'last_name' => 'Prueba',
             'email' => 'cliente@example.com',
             'phone' => '3001234567',
             'direction' => 'Calle 123 # 45 - 67',
-            'user_Name' => 'clienteprueba',
+            'user_name' => 'clienteprueba',
             'password' => 'secret1234',
             'email_verified_at' => now(),
             'is_active' => true,
@@ -308,7 +308,7 @@ class CartControllerTest extends TestCase
 
         // Authenticated client confirms checkout
         $confirmResponse = $this->actingAs($client)->post(route('cart.checkout.confirm'), [
-            'customer_name' => $client->name . ' ' . $client->last_Name,
+            'customer_name' => $client->name . ' ' . $client->last_name,
             'customer_email' => $client->email,
             'customer_phone' => $client->phone,
             'customer_address' => $client->direction,

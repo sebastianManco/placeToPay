@@ -63,11 +63,11 @@ class UserAuthenticatableTest extends TestCase
         $user = new User([
             'identification' => 12345678,
             'name' => 'John',
-            'last_Name' => 'Doe',
+            'last_name' => 'Doe',
             'email' => 'john@example.com',
             'phone' => '1234567',
             'direction' => 'Street 1',
-            'user_Name' => 'johndoe',
+            'user_name' => 'johndoe',
             'password' => 'secret123',
             'remember_token' => 'token123',
         ]);

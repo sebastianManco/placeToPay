@@ -20,10 +20,10 @@ class ProductApiTest extends TestCase
      */
     protected function createAdminUser(): User
     {
-        return User::create([
+        $user = User::create([
             'identification' => 60000001,
             'name' => 'Admin',
-            'last_Name' => 'Tester',
+            'last_name' => 'Tester',
             'email' => 'admin.product@test.com',
             'phone' => '3001234567',
             'direction' => 'Admin Avenue',
@@ -31,8 +31,10 @@ class ProductApiTest extends TestCase
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'admin',
         ]);
+        $user->syncRoles(['admin']);
+
+        return $user;
     }
 
     /**
@@ -43,7 +45,7 @@ class ProductApiTest extends TestCase
         return User::create([
             'identification' => 60000002,
             'name' => 'Client',
-            'last_Name' => 'Tester',
+            'last_name' => 'Tester',
             'email' => 'client.product@test.com',
             'phone' => '3009876543',
             'direction' => 'Client Street',

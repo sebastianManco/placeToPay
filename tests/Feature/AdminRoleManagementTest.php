@@ -24,10 +24,13 @@ class AdminRoleManagementTest extends TestCase
         static $counter = 1;
         $id = 73000000 + ($counter++);
 
-        return User::create(array_merge([
+        $role = $attributes['role'] ?? 'admin';
+        unset($attributes['role']);
+
+        $user = User::create(array_merge([
             'identification' => $id,
             'name' => "AdminRole{$counter}",
-            'last_Name' => 'Supervisor',
+            'last_name' => 'Supervisor',
             'email' => "admin_role{$counter}@example.com",
             'phone' => '3005554433',
             'direction' => 'Carrera 7 # 32',
@@ -35,8 +38,11 @@ class AdminRoleManagementTest extends TestCase
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'admin',
         ], $attributes));
+
+        $user->syncRoles([$role]);
+
+        return $user;
     }
 
     public function test_admin_can_view_roles_list(): void
@@ -180,7 +186,7 @@ class AdminRoleManagementTest extends TestCase
         $client = User::create([
             'identification' => 74000001,
             'name' => 'Carlos',
-            'last_Name' => 'Gomez',
+            'last_name' => 'Gomez',
             'email' => 'carlos@example.com',
             'phone' => '3001112233',
             'direction' => 'Calle 10 # 20',
@@ -195,7 +201,7 @@ class AdminRoleManagementTest extends TestCase
 
         $response = $this->actingAs($admin)->put("/admin/clients/{$client->identification}", [
             'name' => 'Carlos',
-            'last_Name' => 'Gomez',
+            'last_name' => 'Gomez',
             'email' => 'carlos@example.com',
             'phone' => '3001112233',
             'direction' => 'Calle 10 # 20',

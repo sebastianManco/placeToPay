@@ -16,11 +16,11 @@ class UserAuthenticationTest extends TestCase
         $user = new User([
             'identification' => 98765432,
             'name' => 'Jane',
-            'last_Name' => 'Doe',
+            'last_name' => 'Doe',
             'email' => 'jane@example.com',
             'phone' => '987654321',
             'direction' => 'Avenue 2',
-            'user_Name' => 'janedoe',
+            'user_name' => 'janedoe',
             'password' => 'password123',
         ]);
         $user->id = 1;

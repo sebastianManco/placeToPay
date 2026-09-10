@@ -18,10 +18,10 @@ class CategoryApiTest extends TestCase
      */
     protected function createAdminUser(): User
     {
-        return User::create([
+        $user = User::create([
             'identification' => 70000001,
             'name' => 'Admin',
-            'last_Name' => 'CategoryTester',
+            'last_name' => 'CategoryTester',
             'email' => 'admin.category@test.com',
             'phone' => '3001234567',
             'direction' => 'Category Avenue',
@@ -29,8 +29,10 @@ class CategoryApiTest extends TestCase
             'password' => 'secret123',
             'email_verified_at' => now(),
             'is_active' => true,
-            'role' => 'admin',
         ]);
+        $user->syncRoles(['admin']);
+
+        return $user;
     }
 
     /**
@@ -41,7 +43,7 @@ class CategoryApiTest extends TestCase
         return User::create([
             'identification' => 70000002,
             'name' => 'Client',
-            'last_Name' => 'CategoryTester',
+            'last_name' => 'CategoryTester',
             'email' => 'client.category@test.com',
             'phone' => '3009876543',
             'direction' => 'Client Road',
