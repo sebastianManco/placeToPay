@@ -17,3 +17,9 @@ use Illuminate\Support\Facades\Artisan;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->describe('Display an inspiring quote');
+
+\Illuminate\Support\Facades\Schedule::command('orders:reconcile-pending --minutes=15')
+    ->everyTenMinutes()
+    ->withoutOverlapping()
+    ->runInBackground();
+

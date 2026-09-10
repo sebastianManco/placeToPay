@@ -306,7 +306,7 @@ class Order extends Model
 
         match ($normalized) {
             'APPROVED' => $this->markAsApproved(),
-            'REJECTED', 'FAILED', 'PARTIAL_EXPIRED' => $this->markAsRejected(),
+            'REJECTED', 'FAILED', 'PARTIAL_EXPIRED', 'CANCELLED', 'EXPIRED' => $this->markAsRejected(),
             'PENDING', 'OK' => $this->markAsPendingPayment(),
             default => null,
         };
