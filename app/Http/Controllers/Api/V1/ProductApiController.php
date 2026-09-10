@@ -15,13 +15,18 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
+use App\Services\Cache\CacheVersionManager;
+use Psr\Cache\CacheItemPoolInterface;
+
 class ProductApiController extends BaseApiController
 {
     /**
      * Create a new controller instance.
      */
     public function __construct(
-        protected ProductSpreadsheetServiceInterface $spreadsheetService
+        protected ProductSpreadsheetServiceInterface $spreadsheetService,
+        protected CacheItemPoolInterface $cachePool,
+        protected CacheVersionManager $versionManager
     ) {}
 
     /**
@@ -34,9 +39,23 @@ class ProductApiController extends BaseApiController
     {
         $perPage = min(max((int) $request->query('per_page', 15), 1), 100);
 
-        $query = Product::with('category')->filter($request->query());
+        $cacheKey = $this->versionManager->makeKey(
+            CacheVersionManager::TAG_PRODUCTS,
+            'index_' . md5(json_encode($request->query()))
+        );
 
-        $products = $query->paginate($perPage);
+        $item = $this->cachePool->getItem($cacheKey);
+
+        if ($item->isHit()) {
+            $products = $item->get();
+        } else {
+            $query = Product::with('category')->filter($request->query());
+            $products = $query->paginate($perPage);
+
+            $item->set($products);
+            $item->expiresAfter(900); // 15 minutes
+            $this->cachePool->save($item);
+        }
 
         return $this->paginatedResponse(
             $products,
@@ -83,7 +102,21 @@ class ProductApiController extends BaseApiController
      */
     public function show(Product $product): JsonResponse
     {
+        $cacheKey = "product_{$product->id}";
+        $item = $this->cachePool->getItem($cacheKey);
+
+        if ($item->isHit()) {
+            $productData = $item->get();
+            return $this->successResponse(
+                new ProductResource($productData),
+                'Producto obtenido exitosamente.'
+            );
+        }
+
         $product->load('category');
+        $item->set($product);
+        $item->expiresAfter(3600); // 1 hour
+        $this->cachePool->save($item);
 
         return $this->successResponse(
             new ProductResource($product),

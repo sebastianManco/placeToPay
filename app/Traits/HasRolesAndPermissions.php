@@ -97,13 +97,73 @@ trait HasRolesAndPermissions
             return true;
         }
 
-        // Direct user permissions
-        if ($this->permissions->contains('slug', $permissionSlug)) {
-            return true;
+        $slugs = $this->getCachedPermissionSlugs();
+
+        return in_array($permissionSlug, $slugs, true);
+    }
+
+    /**
+     * Get cached consolidated permission slugs for the user via PSR-6.
+     *
+     * @return array<string>
+     */
+    public function getCachedPermissionSlugs(): array
+    {
+        $userId = $this->identification ?? $this->id;
+        if (! $userId) {
+            return [];
         }
 
-        // Permissions inherited through roles
-        return $this->roles->flatMap->permissions->contains('slug', $permissionSlug);
+        try {
+            /** @var \Psr\Cache\CacheItemPoolInterface $pool */
+            $pool = app(\Psr\Cache\CacheItemPoolInterface::class);
+            /** @var \App\Services\Cache\CacheVersionManager $versionManager */
+            $versionManager = app(\App\Services\Cache\CacheVersionManager::class);
+
+            $cacheKey = $versionManager->makeKey('roles', "user_perms_{$userId}");
+            $item = $pool->getItem($cacheKey);
+
+            if ($item->isHit()) {
+                return (array) $item->get();
+            }
+
+            $directSlugs = $this->permissions->pluck('slug')->all();
+            $roleSlugs = $this->roles->flatMap->permissions->pluck('slug')->all();
+            $slugs = array_values(array_unique(array_merge($directSlugs, $roleSlugs)));
+
+            $item->set($slugs);
+            $item->expiresAfter(3600); // 1 hour
+            $pool->save($item);
+
+            return $slugs;
+        } catch (\Throwable) {
+            $directSlugs = $this->permissions->pluck('slug')->all();
+            $roleSlugs = $this->roles->flatMap->permissions->pluck('slug')->all();
+            return array_values(array_unique(array_merge($directSlugs, $roleSlugs)));
+        }
+    }
+
+    /**
+     * Invalidate user's permission cache.
+     */
+    public function invalidatePermissionsCache(): void
+    {
+        $userId = $this->identification ?? $this->id;
+        if (! $userId) {
+            return;
+        }
+
+        try {
+            /** @var \Psr\Cache\CacheItemPoolInterface $pool */
+            $pool = app(\Psr\Cache\CacheItemPoolInterface::class);
+            /** @var \App\Services\Cache\CacheVersionManager $versionManager */
+            $versionManager = app(\App\Services\Cache\CacheVersionManager::class);
+
+            $cacheKey = $versionManager->makeKey('roles', "user_perms_{$userId}");
+            $pool->deleteItem($cacheKey);
+        } catch (\Throwable) {
+            // Ignore if cache unavailable
+        }
     }
 
     /**
@@ -180,6 +240,7 @@ trait HasRolesAndPermissions
 
         // Reload relationship
         $this->unsetRelation('roles');
+        $this->invalidatePermissionsCache();
 
         return $this;
     }
@@ -198,6 +259,7 @@ trait HasRolesAndPermissions
         }
 
         $this->unsetRelation('roles');
+        $this->invalidatePermissionsCache();
 
         return $this;
     }
@@ -224,6 +286,7 @@ trait HasRolesAndPermissions
 
         $this->roles()->sync($ids);
         $this->unsetRelation('roles');
+        $this->invalidatePermissionsCache();
 
         return $this;
     }
@@ -239,6 +302,7 @@ trait HasRolesAndPermissions
 
         $this->permissions()->syncWithoutDetaching([$permissionModel->id]);
         $this->unsetRelation('permissions');
+        $this->invalidatePermissionsCache();
 
         return $this;
     }
@@ -257,6 +321,7 @@ trait HasRolesAndPermissions
         }
 
         $this->unsetRelation('permissions');
+        $this->invalidatePermissionsCache();
 
         return $this;
     }
@@ -283,6 +348,7 @@ trait HasRolesAndPermissions
 
         $this->permissions()->sync($ids);
         $this->unsetRelation('permissions');
+        $this->invalidatePermissionsCache();
 
         return $this;
     }
