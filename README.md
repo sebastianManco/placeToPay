@@ -174,13 +174,43 @@ En caso de error de validación (`422 Unprocessable Entity`):
 
 ## 🛠️ Requisitos Técnicos del Entorno
 
-- **PHP**: ^8.2 (extensiones `pdo_mysql`, `bcmath`, `zip`, `gd`)
+- **PHP**: ^8.2 (extensiones `pdo_mysql`, `pdo_sqlite`, `bcmath`, `zip`, `gd`, `pcntl`, `posix`)
 - **Framework**: Laravel 11.x
 - **Autenticación API**: Laravel Sanctum
 - **Gestor de Paquetes**: Composer 2.x
 - **Base de Datos**: MySQL 8.x / MariaDB
 - **Servidor Web / Contenedores**: Docker & Docker Compose
 - **Cola de Procesos**: Worker de Laravel (`php artisan queue:work`) para reportes en segundo plano
+
+---
+
+## 🐳 Despliegue con Docker y Multiplataforma
+
+El proyecto está 100% contenerizado para ejecutarse en cualquier sistema operativo (Windows, macOS, Linux) o servidor remoto sin errores de entorno.
+
+### 1. Entorno de Desarrollo Local
+```bash
+# 1. Clonar repositorio y copiar variables de entorno
+cp .env.example .env
+
+# 2. Levantar entorno con Docker Compose (o usar 'make up')
+docker compose up -d
+
+# 3. Inicializar dependencias y claves
+docker compose exec app composer install
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan storage:link
+docker compose exec app php artisan migrate --seed
+```
+
+### 2. Entorno de Producción / Servidor (Imagen Autónoma Multi-Stage)
+El proyecto incluye un `Dockerfile.prod` que compila assets de frontend (Vite), optimiza dependencias de Composer y corre Nginx + PHP-FPM bajo Supervisord:
+```bash
+# Levantar stack productivo completo (App + Queue Worker + MariaDB con healthcheck)
+docker compose -f docker-compose.prod.yml up -d
+# O usando Makefile:
+make prod-up
+```
 
 ---
 
@@ -195,3 +225,4 @@ El proyecto cuenta con **PHPStan** configurado a través de **Larastan** (Nivel 
   # o directamente
   docker compose exec app php vendor/bin/phpstan analyse
   ```
+
