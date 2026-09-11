@@ -1,0 +1,86 @@
+services:
+  app:
+    image: ${DOCKER_IMAGE:-placetopay-app:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: placetopay-app-prod
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:80"
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      RUN_MIGRATIONS: "true"
+      OPTIMIZE_CONFIG: "true"
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-placetopay}
+      DB_USERNAME: ${DB_USERNAME:-placetopay}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      QUEUE_CONNECTION: database
+    env_file:
+      - .env
+    volumes:
+      - app_storage:/var/www/html/storage/app/public
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - placetopay-net
+
+  worker:
+    image: ${DOCKER_IMAGE:-placetopay-app:latest}
+    container_name: placetopay-worker-prod
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "--tries=3", "--timeout=90"]
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-placetopay}
+      DB_USERNAME: ${DB_USERNAME:-placetopay}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      QUEUE_CONNECTION: database
+    volumes:
+      - app_storage:/var/www/html/storage/app/public
+    depends_on:
+      db:
+        condition: service_healthy
+      app:
+        condition: service_started
+    networks:
+      - placetopay-net
+
+  db:
+    image: mariadb:10.6
+    container_name: placetopay-db-prod
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-placetopay}
+      MYSQL_USER: ${DB_USERNAME:-placetopay}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - dbdata_prod:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-secret}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - placetopay-net
+
+networks:
+  placetopay-net:
+    driver: bridge
+
+volumes:
+  dbdata_prod:
+    driver: local
+  app_storage:
+    driver: local
