@@ -1,0 +1,79 @@
+# ==========================================
+# Stage 1: Build Frontend Assets with Vite
+# ==========================================
+FROM node:20-alpine AS node-builder
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY vite.config.js ./
+COPY resources/ ./resources/
+COPY public/ ./public/
+
+RUN npm run build
+
+# ==========================================
+# Stage 2: Install Composer Dependencies
+# ==========================================
+FROM composer:2 AS composer-builder
+
+WORKDIR /app
+
+COPY composer*.json ./
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --prefer-dist \
+    --optimize-autoloader \
+    --no-scripts
+
+COPY . .
+
+RUN composer dump-autoload --optimize --no-scripts
+
+# ==========================================
+# Stage 3: Standalone Production Runtime
+# ==========================================
+FROM php:8.2-fpm-alpine
+
+RUN apk add --no-cache \
+    nginx \
+    supervisor \
+    libzip-dev \
+    sqlite-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    netcat-openbsd \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql pdo_sqlite bcmath zip gd pcntl posix opcache
+
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
+WORKDIR /var/www/html
+
+# Copy application source code
+COPY . .
+
+# Copy production vendor dependencies
+COPY --from=composer-builder /app/vendor ./vendor
+
+# Copy compiled Vite assets
+COPY --from=node-builder /app/public/build ./public/build
+
+# Copy runtime configurations
+COPY docker/nginx.conf /etc/nginx/http.d/default.conf
+COPY docker/supervisord.conf /etc/supervisord.conf
+COPY docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+EXPOSE 80
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
